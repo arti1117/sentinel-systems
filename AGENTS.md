@@ -1,11 +1,11 @@
 # Repository Guidelines
 
 ## Scope Boundary (must read first)
-This repository is an internal documentation repository for a Phase 3+ deferred product direction. Its product name, codename, and internal framing are **internal-only**.
+This repository is a **PUBLIC flagship** — the operator / observability plane of a two-persona engineering portfolio (its engineer counterpart is the `fleet-master-controller` repo). It is meant to be surfaced: linked from the blog's Projects tab, the portfolio, and the résumé.
 
-- Do not surface the product/codename in external artifacts such as LinkedIn, cold messages, public PRs, blog posts, resumes, or public portfolios.
-- When drafting external-facing material, use generic domain language unless the user explicitly authorizes a specific disclosure.
-- If this file conflicts with `/home/jy/Documents/AGENTS.md`, the stricter confidentiality and scope boundary wins.
+- **Represent the stage honestly.** Current stage = market research + system analysis + business-framing docs (no production code yet). Do not describe planned work as built; clearly separate design/research from implemented.
+- **No confidential or third-party material.** Nothing sourced from an employer (GME) — secrets, internal systems, incident specifics, customer PII — and no third-party NDA/contract detail. Use generic, domain-level language for anything informed by work experience.
+- If this file conflicts with `/home/jy/Documents/AGENTS.md`, the stricter confidentiality boundary still wins.
 
 ## Project Structure & Module Organization
 `README.md` explains the product vision. All contributor-facing content lives under `docs/`.
