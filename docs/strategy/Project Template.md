@@ -1,6 +1,5 @@
 # Mission-First Project DB Template
 
-[Excution Log](Mission-First%20Project%20DB%20Template/Excution%20Log%2033529ab69f568002ac0de446e94b0878.csv)
 
 > 이 DB의 목적은 프로젝트 완수가 아니라, 
 **미션(Mission)에 부합하는 시도만 남기고 나머지는 자동 폐기하는 필터**다.
