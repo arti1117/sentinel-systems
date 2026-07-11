@@ -14,7 +14,11 @@
 
 ## Repository Docs Overview
 
-- `docs/strategy/`: 비즈니스 기획, 일간/주간/월간 루틴, 문제 정의서(PDD), 의사결정 로그
+- `docs/strategy/`: 의사결정·시장·프로젝트 템플릿
 - `docs/research/`: 시장 동향, 고객 지불 의사(WTP) 탐색 및 B2B 시장 리서치
 - `docs/technical/`: 자율주행 시스템(Autoware, CARLA, F1Tenth 등) 딥다이브 및 구조 아키텍처
 - `docs/guides/`: 기술 및 프로젝트 온보딩 가이드
+
+## Related
+
+- 이 관제(operator) 평면의 엔지니어링 짝: [fleet-master-controller](https://github.com/arti1117/fleet-master-controller) — Go로 구현한 robot-fleet 감사 로그·결정적 재현(deterministic replay) 컨트롤 플레인. 같은 신뢰성 스택의 두 평면이다.
