@@ -41,7 +41,7 @@ class TrafficStatusServiceTest {
         TrafficOverviewResponse all = service.getOverview(null, null);
         assertThat(all.totalLinks()).isEqualTo(21);
         assertThat(all.sessionApiCallsUsed()).isZero();
-        assertThat(all.links().getFirst().congestionLevel()).isEqualTo(CongestionLevel.CONGESTED);
+        assertThat(all.unknownCount()).isEqualTo(21);
         assertThat(all.links()).allMatch(link -> link.geometry().size() >= 50);
 
         TrafficOverviewResponse topisOnly = service.getOverview(TrafficSource.TOPIS, null);

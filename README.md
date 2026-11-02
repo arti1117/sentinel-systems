@@ -19,7 +19,8 @@
 
 | 계층 | 기술 스택 | 역할 |
 |---|---|---|
-| **Runtime & Framework** | **Java 21 LTS (Virtual Threads) · Spring Boot 3.4 · Gradle (Kotlin DSL)** | `spring.threads.virtual.enabled=true` 기반 다중 공공 API(ITS + TOPIS) 병렬 수집, Java 21 `record` 도메인 모델링 |
+| **Frontend Server** | **React 19 · TypeScript · Vite · Leaflet** (`frontend/`, `port: 5173`) | 실시간 도로 노선 정밀 지도 렌더링, 출처·상태 필터링, 쿼터 보호용 단일/전체 수동 API 갱신 제어 |
+| **Backend API Server** | **Java 21 LTS (Virtual Threads) · Spring Boot 3.4 · Gradle (Kotlin DSL)** (`port: 8080`) | 다중 공공 API(ITS + TOPIS) 수집·정규화, 로컬 실측 캐시(`.sentinel-live-cache.json`) 관리, REST API 제공 |
 | **Spatial & Relational DB** | **PostgreSQL 16 + PostGIS** (`Spring Data JPA` + `Hibernate Spatial`) | 도로 구간(`Link`)·돌발 위치 공간 질의 및 소통·이상징후 이력 저장 |
 | **In-Memory State & Cache** | **Redis 7** (`Spring Data Redis` + `ConcurrentHashMap`) | 실시간 도로현황 최신 스냅샷 유지 및 조회 응답 가속 |
 | **Quality & Testbed** | **JUnit 5 · AssertJ · Spring MockMvc** | 이기종 공공데이터 정규화·결측치 방어·상태 갱신 단위 및 API 슬라이스 테스트 |
@@ -29,12 +30,12 @@
 ## 로컬 실행 및 검증 명령어
 
 ```bash
-# 1. 인프라 기동 (PostgreSQL/PostGIS + Redis)
-docker compose up -d
-
-# 2. 컴파일 및 테스트 실행
+# 1. 백엔드 테스트 및 API 서버 실행 (http://localhost:8080)
 ./gradlew test
-
-# 3. 로컬 API 서버 실행
 ./gradlew bootRun
+
+# 2. 프론트엔드 React 개발 서버 실행 (http://localhost:5173 -> /api 프록시)
+cd frontend
+npm install
+npm run dev
 ```

@@ -47,7 +47,6 @@ class TrafficControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalLinks").value(21))
                 .andExpect(jsonPath("$.sessionApiCallsUsed").value(0))
-                .andExpect(jsonPath("$.links[0].congestionLevel").value("CONGESTED"))
                 .andExpect(jsonPath("$.links[0].geometry[0].lat").isNumber())
                 .andExpect(jsonPath("$.links[0].geometry[0].lng").isNumber());
     }

@@ -21,8 +21,8 @@ import org.springframework.stereotype.Component;
 
 /**
  * 수도권 21개 주요 도로 구간의 정밀 중심선 좌표(road-network.json)와
- * 로컬 디스크 속도 캐시(.sentinel-live-cache.json)를 관리한다.
- * 서버 재시작 시 외부 오픈API 쿼터를 소모하지 않고 마지막 실측 속도를 복원한다.
+ * 로컬 디스크 실측 속도 캐시(.sentinel-live-cache.json)를 관리한다.
+ * 오픈API에서 아직 수신되지 않은 구간은 가짜 기본값을 넣지 않고 0.0(UNKNOWN 미수신)으로 반환한다.
  */
 @Component
 public class RoadNetworkCatalog {
@@ -41,14 +41,22 @@ public class RoadNetworkCatalog {
             String roadName,
             String sectionName,
             RoadType roadType,
-            double defaultSpeedKph,
+            String itsRouteType,
+            String itsRouteNo,
+            String itsDrcType,
             List<GeoPoint> geometry
     ) {
     }
 
     public RoadNetworkCatalog() {
+        this(true);
+    }
+
+    public RoadNetworkCatalog(boolean loadDiskCache) {
         this.sections = loadSeedsFromClasspath();
-        loadDiskSpeedCache();
+        if (loadDiskCache) {
+            loadDiskSpeedCache();
+        }
     }
 
     public List<RoadSectionSeed> sectionsBySource(TrafficSource source) {
@@ -58,7 +66,7 @@ public class RoadNetworkCatalog {
     }
 
     public RoadLinkTraffic toRoadLinkTraffic(RoadSectionSeed seed, Instant observedAt) {
-        double speed = cachedSpeeds.getOrDefault(seed.linkId(), seed.defaultSpeedKph());
+        double speed = cachedSpeeds.getOrDefault(seed.linkId(), 0.0);
         return RoadLinkTraffic.of(
                 seed.source(),
                 seed.linkId(),
@@ -73,7 +81,7 @@ public class RoadNetworkCatalog {
 
     public void updateCachedSpeed(String linkId, double speedKph) {
         if (speedKph > 0.0) {
-            cachedSpeeds.put(linkId, speedKph);
+            cachedSpeeds.put(linkId, Math.round(speedKph * 10.0) / 10.0);
         }
     }
 

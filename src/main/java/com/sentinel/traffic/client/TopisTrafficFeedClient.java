@@ -30,7 +30,7 @@ public class TopisTrafficFeedClient implements TrafficFeedClient {
     private final RestClient restClient;
 
     public TopisTrafficFeedClient() {
-        this(new PublicApiProperties(3000L, "", ""), new RoadNetworkCatalog());
+        this(new PublicApiProperties(3000L, "", ""), new RoadNetworkCatalog(false));
     }
 
     @Autowired

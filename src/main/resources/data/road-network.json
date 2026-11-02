@@ -6,7 +6,6 @@
     "roadName": "경부고속도로",
     "sectionName": "한남IC → 서초IC → 양재IC",
     "roadType": "HIGHWAY",
-    "defaultSpeedKph": 26.5,
     "geometry": [
       {
         "lat": 37.527,
@@ -1236,7 +1235,10 @@
         "lat": 37.46331,
         "lng": 127.0417
       }
-    ]
+    ],
+    "itsRouteType": "ex",
+    "itsRouteNo": "0010",
+    "itsDrcType": "up"
   },
   {
     "source": "ITS",
@@ -1245,7 +1247,6 @@
     "roadName": "경부고속도로",
     "sectionName": "양재IC → 달래내고개 → 판교JC",
     "roadType": "HIGHWAY",
-    "defaultSpeedKph": 48.0,
     "geometry": [
       {
         "lat": 37.46331,
@@ -2779,7 +2780,10 @@
         "lat": 37.40552,
         "lng": 127.09532
       }
-    ]
+    ],
+    "itsRouteType": "ex",
+    "itsRouteNo": "0010",
+    "itsDrcType": "down"
   },
   {
     "source": "ITS",
@@ -2788,7 +2792,6 @@
     "roadName": "경부고속도로",
     "sectionName": "판교JC → 서울TG → 신갈JC",
     "roadType": "HIGHWAY",
-    "defaultSpeedKph": 76.0,
     "geometry": [
       {
         "lat": 37.40552,
@@ -5106,7 +5109,10 @@
         "lat": 37.274,
         "lng": 127.10364
       }
-    ]
+    ],
+    "itsRouteType": "ex",
+    "itsRouteNo": "0010",
+    "itsDrcType": "down"
   },
   {
     "source": "ITS",
@@ -5115,7 +5121,6 @@
     "roadName": "수도권제1순환고속도로",
     "sectionName": "판교JC → 성남IC → 송파IC → 하남JC",
     "roadType": "HIGHWAY",
-    "defaultSpeedKph": 84.0,
     "geometry": [
       {
         "lat": 37.40552,
@@ -7777,7 +7782,10 @@
         "lat": 37.5262,
         "lng": 127.1938
       }
-    ]
+    ],
+    "itsRouteType": "ex",
+    "itsRouteNo": "1000",
+    "itsDrcType": "up"
   },
   {
     "source": "ITS",
@@ -7786,7 +7794,6 @@
     "roadName": "수도권제1순환고속도로",
     "sectionName": "하남JC → 상일IC → 구리남양주TG → 퇴계원IC",
     "roadType": "HIGHWAY",
-    "defaultSpeedKph": 42.0,
     "geometry": [
       {
         "lat": 37.5262,
@@ -9932,7 +9939,10 @@
         "lat": 37.64798,
         "lng": 127.13436
       }
-    ]
+    ],
+    "itsRouteType": "ex",
+    "itsRouteNo": "1000",
+    "itsDrcType": "up"
   },
   {
     "source": "ITS",
@@ -9941,7 +9951,6 @@
     "roadName": "수도권제1순환고속도로",
     "sectionName": "자유로JC → 김포IC → 노오지JC → 계양IC",
     "roadType": "HIGHWAY",
-    "defaultSpeedKph": 34.0,
     "geometry": [
       {
         "lat": 37.62061,
@@ -11227,7 +11236,10 @@
         "lat": 37.53697,
         "lng": 126.74701
       }
-    ]
+    ],
+    "itsRouteType": "ex",
+    "itsRouteNo": "1000",
+    "itsDrcType": "down"
   },
   {
     "source": "ITS",
@@ -11236,7 +11248,6 @@
     "roadName": "영동고속도로",
     "sectionName": "광교상현IC → 동수원IC → 신갈JC → 마성IC",
     "roadType": "HIGHWAY",
-    "defaultSpeedKph": 33.5,
     "geometry": [
       {
         "lat": 37.29154,
@@ -12750,7 +12761,10 @@
         "lat": 37.28274,
         "lng": 127.19965
       }
-    ]
+    ],
+    "itsRouteType": "ex",
+    "itsRouteNo": "0500",
+    "itsDrcType": "up"
   },
   {
     "source": "ITS",
@@ -12759,7 +12773,6 @@
     "roadName": "서해안고속도로",
     "sectionName": "금천IC → 일직JC → 광명역IC → 목감IC",
     "roadType": "HIGHWAY",
-    "defaultSpeedKph": 51.0,
     "geometry": [
       {
         "lat": 37.45708,
@@ -13717,7 +13730,10 @@
         "lat": 37.381,
         "lng": 126.86899
       }
-    ]
+    ],
+    "itsRouteType": "ex",
+    "itsRouteNo": "0150",
+    "itsDrcType": "up"
   },
   {
     "source": "ITS",
@@ -13726,7 +13742,6 @@
     "roadName": "자유로(국도77호선)",
     "sectionName": "가양대교북단 → 행주대교북단 → 장항IC",
     "roadType": "NATIONAL",
-    "defaultSpeedKph": 68.5,
     "geometry": [
       {
         "lat": 37.57066,
@@ -14672,7 +14687,10 @@
         "lat": 37.64335,
         "lng": 126.76594
       }
-    ]
+    ],
+    "itsRouteType": "its",
+    "itsRouteNo": "0077",
+    "itsDrcType": "up"
   },
   {
     "source": "TOPIS",
@@ -14681,7 +14699,6 @@
     "roadName": "올림픽대로(서부)",
     "sectionName": "가양대교남단 → 성산대교남단 → 여의상류IC → 한강대교남단",
     "roadType": "URBAN_HIGHWAY",
-    "defaultSpeedKph": 28.0,
     "geometry": [
       {
         "lat": 37.56189,
@@ -16079,7 +16096,10 @@
         "lat": 37.51235,
         "lng": 126.95857
       }
-    ]
+    ],
+    "itsRouteType": "",
+    "itsRouteNo": "",
+    "itsDrcType": ""
   },
   {
     "source": "TOPIS",
@@ -16088,7 +16108,6 @@
     "roadName": "올림픽대로(동부)",
     "sectionName": "한강대교남단 → 동작대교 → 한남대교남단 → 성수대교 → 잠실대교",
     "roadType": "URBAN_HIGHWAY",
-    "defaultSpeedKph": 34.3,
     "geometry": [
       {
         "lat": 37.51235,
@@ -18502,7 +18521,10 @@
         "lat": 37.52091,
         "lng": 127.09443
       }
-    ]
+    ],
+    "itsRouteType": "",
+    "itsRouteNo": "",
+    "itsDrcType": ""
   },
   {
     "source": "TOPIS",
@@ -18511,7 +18533,6 @@
     "roadName": "강변북로(서부)",
     "sectionName": "가양대교북단 → 성산대교북단 → 양화대교북단 → 마포대교북단",
     "roadType": "URBAN_HIGHWAY",
-    "defaultSpeedKph": 44.0,
     "geometry": [
       {
         "lat": 37.57066,
@@ -19773,7 +19794,10 @@
         "lat": 37.53644,
         "lng": 126.94126
       }
-    ]
+    ],
+    "itsRouteType": "",
+    "itsRouteNo": "",
+    "itsDrcType": ""
   },
   {
     "source": "TOPIS",
@@ -19782,7 +19806,6 @@
     "roadName": "강변북로(동부)",
     "sectionName": "마포대교북단 → 한강대교북단 → 한남대교북단 → 성수대교북단 → 잠실대교북단",
     "roadType": "URBAN_HIGHWAY",
-    "defaultSpeedKph": 28.0,
     "geometry": [
       {
         "lat": 37.53644,
@@ -21736,7 +21759,10 @@
         "lat": 37.53562,
         "lng": 127.08746
       }
-    ]
+    ],
+    "itsRouteType": "",
+    "itsRouteNo": "",
+    "itsDrcType": ""
   },
   {
     "source": "TOPIS",
@@ -21745,7 +21771,6 @@
     "roadName": "내부순환로",
     "sectionName": "성산대교북단 → 연희IC → 홍은램프 → 정릉터널 → 길음램프",
     "roadType": "URBAN_HIGHWAY",
-    "defaultSpeedKph": 8.1,
     "geometry": [
       {
         "lat": 37.5562,
@@ -23899,16 +23924,18 @@
         "lat": 37.60677,
         "lng": 127.01239
       }
-    ]
+    ],
+    "itsRouteType": "",
+    "itsRouteNo": "",
+    "itsDrcType": ""
   },
   {
     "source": "TOPIS",
     "linkId": "TOPIS-UHWY-061-01",
-    "apiLinkId": "1050000100",
+    "apiLinkId": "1050000300",
     "roadName": "동부간선도로",
     "sectionName": "성수JC → 군자교 → 장안교 → 중랑교 → 월릉교",
     "roadType": "URBAN_HIGHWAY",
-    "defaultSpeedKph": 26.0,
     "geometry": [
       {
         "lat": 37.54545,
@@ -25546,7 +25573,10 @@
         "lat": 37.62393,
         "lng": 127.06821
       }
-    ]
+    ],
+    "itsRouteType": "",
+    "itsRouteNo": "",
+    "itsDrcType": ""
   },
   {
     "source": "TOPIS",
@@ -25555,7 +25585,6 @@
     "roadName": "서부간선도로",
     "sectionName": "성산대교남단 → 목동교 → 오목교 → 고척교 → 금천IC",
     "roadType": "URBAN_HIGHWAY",
-    "defaultSpeedKph": 21.5,
     "geometry": [
       {
         "lat": 37.55037,
@@ -26665,7 +26694,10 @@
         "lat": 37.45708,
         "lng": 126.89002
       }
-    ]
+    ],
+    "itsRouteType": "",
+    "itsRouteNo": "",
+    "itsDrcType": ""
   },
   {
     "source": "TOPIS",
@@ -26674,7 +26706,6 @@
     "roadName": "테헤란로",
     "sectionName": "강남역사거리 → 역삼역 → 선릉역 → 삼성역사거리",
     "roadType": "URBAN_ARTERIAL",
-    "defaultSpeedKph": 19.0,
     "geometry": [
       {
         "lat": 37.49789,
@@ -27044,7 +27075,10 @@
         "lat": 37.50879,
         "lng": 127.06311
       }
-    ]
+    ],
+    "itsRouteType": "",
+    "itsRouteNo": "",
+    "itsDrcType": ""
   },
   {
     "source": "TOPIS",
@@ -27053,7 +27087,6 @@
     "roadName": "강남대로",
     "sectionName": "한남대교남단 → 신사역 → 신논현역 → 강남역 → 양재역",
     "roadType": "URBAN_ARTERIAL",
-    "defaultSpeedKph": 23.2,
     "geometry": [
       {
         "lat": 37.51612,
@@ -27479,7 +27512,10 @@
         "lat": 37.48421,
         "lng": 127.03421
       }
-    ]
+    ],
+    "itsRouteType": "",
+    "itsRouteNo": "",
+    "itsDrcType": ""
   },
   {
     "source": "TOPIS",
@@ -27488,7 +27524,6 @@
     "roadName": "세종대로·한강대로",
     "sectionName": "광화문 → 시청역 → 서울역 → 삼각지역 → 한강대교북단",
     "roadType": "URBAN_ARTERIAL",
-    "defaultSpeedKph": 15.9,
     "geometry": [
       {
         "lat": 37.57536,
@@ -28758,7 +28793,10 @@
         "lat": 37.52184,
         "lng": 126.96644
       }
-    ]
+    ],
+    "itsRouteType": "",
+    "itsRouteNo": "",
+    "itsDrcType": ""
   },
   {
     "source": "TOPIS",
@@ -28767,7 +28805,6 @@
     "roadName": "종로·율곡로",
     "sectionName": "서대문역 → 광화문 → 종각역 → 종로3가 → 동대문역",
     "roadType": "URBAN_ARTERIAL",
-    "defaultSpeedKph": 17.5,
     "geometry": [
       {
         "lat": 37.56566,
@@ -29297,7 +29334,10 @@
         "lat": 37.57136,
         "lng": 127.00945
       }
-    ]
+    ],
+    "itsRouteType": "",
+    "itsRouteNo": "",
+    "itsDrcType": ""
   },
   {
     "source": "TOPIS",
@@ -29306,7 +29346,6 @@
     "roadName": "여의대로·마포대로",
     "sectionName": "영등포로터리 → 여의도환승센터 → 마포대교 → 공덕오거리",
     "roadType": "URBAN_ARTERIAL",
-    "defaultSpeedKph": 26.5,
     "geometry": [
       {
         "lat": 37.51749,
@@ -29780,6 +29819,9 @@
         "lat": 37.54448,
         "lng": 126.95155
       }
-    ]
+    ],
+    "itsRouteType": "",
+    "itsRouteNo": "",
+    "itsDrcType": ""
   }
 ]
