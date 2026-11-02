@@ -1,6 +1,8 @@
 spring:
   application:
     name: sentinel-systems
+  config:
+    import: optional:file:.env[.properties]
   threads:
     virtual:
       enabled: true

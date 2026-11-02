@@ -7,9 +7,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.sentinel.traffic.api.TrafficController;
 import com.sentinel.traffic.client.ItsTrafficFeedClient;
 import com.sentinel.traffic.client.TopisTrafficFeedClient;
+import com.sentinel.traffic.config.PublicApiProperties;
 import com.sentinel.traffic.service.TrafficStatusService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
@@ -17,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(TrafficController.class)
 @Import({TrafficStatusService.class, ItsTrafficFeedClient.class, TopisTrafficFeedClient.class})
+@EnableConfigurationProperties(PublicApiProperties.class)
 @ActiveProfiles("test")
 class TrafficControllerTest {
 
