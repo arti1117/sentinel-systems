@@ -70,7 +70,7 @@
       padding: 12px 14px;
     }
     .kpi-label { font-size: 0.78rem; color: var(--muted); }
-    .kpi-value { font-size: 1.45rem; font-weight: 700; margin-top: 2px; }
+    .kpi-value { font-size: 1.4rem; font-weight: 700; margin-top: 2px; }
     .toolbar {
       display: flex;
       justify-content: space-between;
@@ -79,7 +79,7 @@
       flex-wrap: wrap;
       gap: 10px;
     }
-    .filter-group { display: flex; gap: 6px; flex-wrap: wrap; }
+    .filter-group { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
     button {
       background: var(--panel);
       color: var(--text);
@@ -88,19 +88,35 @@
       border-radius: 6px;
       cursor: pointer;
       font-size: 0.82rem;
+      transition: all 0.15s;
     }
+    button:hover:not(:disabled) { border-color: var(--accent); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
     button.active {
       border-color: var(--accent);
       color: var(--accent);
       font-weight: 600;
     }
+    button.refresh-btn {
+      background: #0284c7;
+      border-color: #38bdf8;
+      font-weight: 600;
+    }
+    .quota-badge {
+      font-size: 0.78rem;
+      color: var(--muted);
+      background: rgba(30, 41, 59, 0.85);
+      border: 1px solid var(--border);
+      padding: 5px 10px;
+      border-radius: 6px;
+    }
     .workspace-grid {
       display: grid;
-      grid-template-columns: 1.15fr 1fr;
+      grid-template-columns: 1.25fr 1fr;
       gap: 16px;
       align-items: start;
     }
-    @media (max-width: 1024px) {
+    @media (max-width: 1080px) {
       .workspace-grid { grid-template-columns: 1fr; }
     }
     .map-card {
@@ -112,7 +128,7 @@
     }
     #road-map {
       width: 100%;
-      height: 540px;
+      height: 600px;
       background: #0b1120;
     }
     .map-legend {
@@ -120,7 +136,7 @@
       bottom: 14px;
       left: 14px;
       z-index: 1000;
-      background: rgba(15, 23, 42, 0.9);
+      background: rgba(15, 23, 42, 0.92);
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 8px 12px;
@@ -130,21 +146,32 @@
     }
     .legend-item { display: flex; align-items: center; gap: 6px; }
     .legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
+    .table-wrapper {
+      max-height: 600px;
+      overflow-y: auto;
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 10px;
-      overflow: hidden;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
     }
     th, td {
-      padding: 11px 12px;
+      padding: 10px 12px;
       text-align: left;
       border-bottom: 1px solid var(--border);
-      font-size: 0.85rem;
+      font-size: 0.84rem;
     }
-    th { color: var(--muted); font-weight: 600; font-size: 0.78rem; }
+    th {
+      position: sticky;
+      top: 0;
+      background: var(--panel);
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.78rem;
+      z-index: 2;
+    }
     tbody tr { cursor: pointer; transition: background 0.15s; }
     tbody tr:hover, tbody tr.selected { background: var(--panel-hover); }
     .badge {
@@ -177,7 +204,7 @@
   <header>
     <div class="title-group">
       <h1>Sentinel Systems — 실시간 도로 관제 상황판</h1>
-      <p>국토부 ITS (고속도로·국도) + 서울시 TOPIS (도시고속·간선도로) 지도 매핑 및 소통 현황</p>
+      <p>국토부 ITS (고속도로·국도) + 서울시 TOPIS (도시고속·간선도로) 정밀 노선 매핑 및 소통 현황</p>
     </div>
     <div class="stages">
       <span class="stage-pill active">1. 도로현황</span>
@@ -189,7 +216,7 @@
 
   <section class="kpi-grid">
     <div class="kpi-card">
-      <div class="kpi-label">관제 구간 수</div>
+      <div class="kpi-label">관제 노선 구간</div>
       <div class="kpi-value" id="kpi-total">-</div>
     </div>
     <div class="kpi-card">
@@ -208,13 +235,17 @@
       <div class="kpi-label">평균 통행속도</div>
       <div class="kpi-value" id="kpi-avg-speed">-</div>
     </div>
+    <div class="kpi-card">
+      <div class="kpi-label">세션 API 호출 수 (쿼터 보호)</div>
+      <div class="kpi-value" style="color: var(--accent)" id="kpi-api-calls">0건</div>
+    </div>
   </section>
 
   <section class="toolbar">
     <div class="filter-group" id="source-filters">
-      <button data-source="" class="active">전체 소스 (ITS + TOPIS)</button>
-      <button data-source="ITS">ITS (고속도로·국도)</button>
-      <button data-source="TOPIS">TOPIS (서울시 도로)</button>
+      <button data-source="" class="active">전체 소스 (21개 노선)</button>
+      <button data-source="ITS">ITS (고속도로·국도 9개)</button>
+      <button data-source="TOPIS">TOPIS (서울시 도로 12개)</button>
     </div>
     <div class="filter-group" id="congestion-filters">
       <button data-congestion="" class="active">전체 상태</button>
@@ -222,6 +253,15 @@
       <button data-congestion="SLOW">서행만</button>
       <button data-congestion="SMOOTH">원활만</button>
       <button id="fit-all-btn" type="button">지도 전체 보기</button>
+    </div>
+    <div class="filter-group">
+      <span class="quota-badge" id="last-refresh-label">자동 호출 꺼짐 (로컬 캐시 표시 중)</span>
+      <button id="refresh-selected-btn" class="refresh-btn" type="button" disabled>
+        선택 노선만 API 갱신 (쿼터 1건)
+      </button>
+      <button id="refresh-all-btn" class="refresh-btn" type="button">
+        실시간 API 새로고침 (수동 호출)
+      </button>
     </div>
   </section>
 
@@ -235,17 +275,19 @@
       </div>
     </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>출처</th>
-          <th>도로명 / 구간 (클릭 시 지도 이동)</th>
-          <th>현재 속도</th>
-          <th>상태</th>
-        </tr>
-      </thead>
-      <tbody id="traffic-tbody"></tbody>
-    </table>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>출처</th>
+            <th>도로명 / 구간 (클릭 시 지도 추적)</th>
+            <th>현재 속도</th>
+            <th>상태</th>
+          </tr>
+        </thead>
+        <tbody id="traffic-tbody"></tbody>
+      </table>
+    </div>
   </main>
 
   <script
@@ -256,6 +298,7 @@
   <script>
     let currentSource = "";
     let currentCongestion = "";
+    let selectedLinkId = null;
     const layerByLinkId = new Map();
 
     const labelMap = {
@@ -280,7 +323,7 @@
     };
 
     const map = L.map("road-map", {
-      center: [37.495, 127.03],
+      center: [37.52, 126.99],
       zoom: 11
     });
 
@@ -291,7 +334,7 @@
 
     const roadLayerGroup = L.featureGroup().addTo(map);
 
-    function renderMapLinks(links) {
+    function renderMapLinks(links, fitView = true) {
       roadLayerGroup.clearLayers();
       layerByLinkId.clear();
 
@@ -300,59 +343,66 @@
         const latLngs = link.geometry.map(pt => [pt.lat, pt.lng]);
         const color = colorMap[link.congestionLevel] || "#38bdf8";
 
-        const polyline = L.polyline(latLngs, {
-          color,
-          weight: 7,
-          opacity: 0.9,
-          lineCap: "round"
+        // 외곽선(Casing)을 먼저 그려 지도 배경 위에서 실제 도로 곡선이 선명하게 보이도록 처리
+        L.polyline(latLngs, {
+          color: "#0f172a",
+          weight: 9,
+          opacity: 0.85,
+          lineCap: "round",
+          lineJoin: "round"
         }).addTo(roadLayerGroup);
 
-        const startMarker = L.circleMarker(latLngs[0], {
-          radius: 5,
-          color: "#0f172a",
-          weight: 2,
-          fillColor: color,
-          fillOpacity: 1.0
+        const polyline = L.polyline(latLngs, {
+          color,
+          weight: 5,
+          opacity: 0.95,
+          lineCap: "round",
+          lineJoin: "round"
         }).addTo(roadLayerGroup);
 
         const popupHtml = `
-          <div style="min-width:190px">
+          <div style="min-width:210px">
             <div style="font-size:0.75rem;color:#94a3b8">[${link.source}] ${roadTypeMap[link.roadType] || link.roadType}</div>
             <div style="font-size:1rem;font-weight:700;margin:2px 0">${link.roadName}</div>
-            <div style="font-size:0.85rem;margin-bottom:6px">${link.sectionName}</div>
+            <div style="font-size:0.84rem;margin-bottom:6px">${link.sectionName}</div>
             <div style="font-weight:700;color:${color}">
               ${labelMap[link.congestionLevel]} · ${link.speedKph.toFixed(1)} km/h
             </div>
           </div>
         `;
         polyline.bindPopup(popupHtml);
-        startMarker.bindPopup(popupHtml);
 
-        polyline.on("click", () => highlightTableRow(link.linkId));
+        polyline.on("click", () => selectRoadLink(link.linkId, false));
         layerByLinkId.set(link.linkId, polyline);
       });
 
-      if (links.length > 0 && roadLayerGroup.getLayers().length > 0) {
-        map.fitBounds(roadLayerGroup.getBounds().pad(0.15));
+      if (fitView && links.length > 0 && roadLayerGroup.getLayers().length > 0) {
+        map.fitBounds(roadLayerGroup.getBounds().pad(0.08));
       }
     }
 
-    function highlightTableRow(linkId) {
+    function selectRoadLink(linkId, zoomToRoad = true) {
+      selectedLinkId = linkId;
+      const btn = document.getElementById("refresh-selected-btn");
+      btn.disabled = !selectedLinkId;
+      btn.textContent = selectedLinkId
+        ? `선택 노선(${selectedLinkId})만 API 갱신 (쿼터 1건)`
+        : "선택 노선만 API 갱신 (쿼터 1건)";
+
       document.querySelectorAll("#traffic-tbody tr").forEach(tr => {
         tr.classList.toggle("selected", tr.dataset.linkId === linkId);
       });
-    }
 
-    function focusRoadLink(linkId) {
-      highlightTableRow(linkId);
       const polyline = layerByLinkId.get(linkId);
       if (polyline) {
-        map.fitBounds(polyline.getBounds().pad(0.4), { maxZoom: 14 });
+        if (zoomToRoad) {
+          map.fitBounds(polyline.getBounds().pad(0.25), { maxZoom: 14 });
+        }
         polyline.openPopup();
       }
     }
 
-    async function loadOverview() {
+    async function loadOverview(fitView = true) {
       const params = new URLSearchParams();
       if (currentSource) params.set("source", currentSource);
       if (currentCongestion) params.set("congestion", currentCongestion);
@@ -365,15 +415,22 @@
       document.getElementById("kpi-slow").textContent = `${data.slowCount}개`;
       document.getElementById("kpi-smooth").textContent = `${data.smoothCount}개`;
       document.getElementById("kpi-avg-speed").textContent = `${data.averageSpeedKph} km/h`;
+      document.getElementById("kpi-api-calls").textContent = `${data.sessionApiCallsUsed}건`;
+
+      if (data.lastLiveRefreshAt) {
+        const dt = new Date(data.lastLiveRefreshAt);
+        document.getElementById("last-refresh-label").textContent =
+          `최근 실시간 갱신: ${dt.toLocaleTimeString("ko-KR")}`;
+      }
 
       const tbody = document.getElementById("traffic-tbody");
       tbody.innerHTML = data.links.map(link => `
-        <tr data-link-id="${link.linkId}">
+        <tr data-link-id="${link.linkId}" class="${link.linkId === selectedLinkId ? 'selected' : ''}">
           <td><span class="source-tag">${link.source}</span></td>
           <td>
             <strong>${link.roadName}</strong>
-            <span style="color:var(--muted);font-size:0.76rem;margin-left:4px">${roadTypeMap[link.roadType] || link.roadType}</span>
-            <div style="color:var(--muted);font-size:0.8rem">${link.sectionName}</div>
+            <span style="color:var(--muted);font-size:0.75rem;margin-left:4px">${roadTypeMap[link.roadType] || link.roadType}</span>
+            <div style="color:var(--muted);font-size:0.79rem">${link.sectionName}</div>
           </td>
           <td><strong>${link.speedKph.toFixed(1)} km/h</strong></td>
           <td><span class="badge badge-${link.congestionLevel}">${labelMap[link.congestionLevel] || link.congestionLevel}</span></td>
@@ -381,18 +438,52 @@
       `).join("");
 
       tbody.querySelectorAll("tr").forEach(tr => {
-        tr.addEventListener("click", () => focusRoadLink(tr.dataset.linkId));
+        tr.addEventListener("click", () => selectRoadLink(tr.dataset.linkId, true));
       });
 
-      renderMapLinks(data.links);
+      renderMapLinks(data.links, fitView);
     }
+
+    async function triggerManualRefresh(linkIdOnly = null) {
+      const btnAll = document.getElementById("refresh-all-btn");
+      const btnSel = document.getElementById("refresh-selected-btn");
+      btnAll.disabled = true;
+      btnSel.disabled = true;
+      document.getElementById("last-refresh-label").textContent = "오픈API 실시간 데이터 수신 중...";
+
+      try {
+        const params = new URLSearchParams();
+        if (linkIdOnly) {
+          params.set("linkId", linkIdOnly);
+        } else if (currentSource) {
+          params.set("source", currentSource);
+        }
+        const res = await fetch(`/api/v1/traffic/refresh?${params.toString()}`, { method: "POST" });
+        const summary = await res.json();
+        await loadOverview(false);
+        if (linkIdOnly) {
+          selectRoadLink(linkIdOnly, false);
+        }
+        const dt = new Date(summary.lastLiveRefreshAt);
+        document.getElementById("last-refresh-label").textContent =
+          `갱신 완료 (${dt.toLocaleTimeString("ko-KR")}, 이번 호출 ${summary.apiCallsUsedNow}건)`;
+      } finally {
+        btnAll.disabled = false;
+        btnSel.disabled = !selectedLinkId;
+      }
+    }
+
+    document.getElementById("refresh-all-btn").addEventListener("click", () => triggerManualRefresh(null));
+    document.getElementById("refresh-selected-btn").addEventListener("click", () => {
+      if (selectedLinkId) triggerManualRefresh(selectedLinkId);
+    });
 
     document.querySelectorAll("#source-filters button").forEach(btn => {
       btn.addEventListener("click", () => {
         document.querySelectorAll("#source-filters button").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         currentSource = btn.dataset.source;
-        loadOverview();
+        loadOverview(true);
       });
     });
 
@@ -401,17 +492,17 @@
         document.querySelectorAll("#congestion-filters button[data-congestion]").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         currentCongestion = btn.dataset.congestion;
-        loadOverview();
+        loadOverview(true);
       });
     });
 
     document.getElementById("fit-all-btn").addEventListener("click", () => {
       if (roadLayerGroup.getLayers().length > 0) {
-        map.fitBounds(roadLayerGroup.getBounds().pad(0.15));
+        map.fitBounds(roadLayerGroup.getBounds().pad(0.08));
       }
     });
 
-    loadOverview();
+    loadOverview(true);
   </script>
 </body>
 </html>

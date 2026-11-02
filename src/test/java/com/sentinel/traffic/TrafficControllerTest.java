@@ -1,11 +1,13 @@
 package com.sentinel.traffic;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.sentinel.traffic.api.TrafficController;
 import com.sentinel.traffic.client.ItsTrafficFeedClient;
+import com.sentinel.traffic.client.RoadNetworkCatalog;
 import com.sentinel.traffic.client.TopisTrafficFeedClient;
 import com.sentinel.traffic.config.PublicApiProperties;
 import com.sentinel.traffic.service.TrafficStatusService;
@@ -18,7 +20,12 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(TrafficController.class)
-@Import({TrafficStatusService.class, ItsTrafficFeedClient.class, TopisTrafficFeedClient.class})
+@Import({
+    TrafficStatusService.class,
+    RoadNetworkCatalog.class,
+    ItsTrafficFeedClient.class,
+    TopisTrafficFeedClient.class
+})
 @EnableConfigurationProperties(PublicApiProperties.class)
 @ActiveProfiles("test")
 class TrafficControllerTest {
@@ -35,23 +42,21 @@ class TrafficControllerTest {
     }
 
     @Test
-    void overviewEndpointReturnsCombinedItsAndTopisTrafficWithGeometry() throws Exception {
+    void overviewEndpointReturns21RoadSectionsWithCurveGeometry() throws Exception {
         mockMvc.perform(get("/api/v1/traffic/overview"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalLinks").value(11))
+                .andExpect(jsonPath("$.totalLinks").value(21))
+                .andExpect(jsonPath("$.sessionApiCallsUsed").value(0))
                 .andExpect(jsonPath("$.links[0].congestionLevel").value("CONGESTED"))
                 .andExpect(jsonPath("$.links[0].geometry[0].lat").isNumber())
                 .andExpect(jsonPath("$.links[0].geometry[0].lng").isNumber());
     }
 
     @Test
-    void overviewEndpointFiltersBySourceAndCongestion() throws Exception {
-        mockMvc.perform(get("/api/v1/traffic/overview")
-                        .param("source", "TOPIS")
-                        .param("congestion", "CONGESTED"))
+    void manualRefreshEndpointUpdatesSelectedLink() throws Exception {
+        mockMvc.perform(post("/api/v1/traffic/refresh")
+                        .param("linkId", "TOPIS-ART-101-01"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalLinks").value(2))
-                .andExpect(jsonPath("$.links[0].source").value("TOPIS"))
-                .andExpect(jsonPath("$.links[0].congestionLevel").value("CONGESTED"));
+                .andExpect(jsonPath("$.updatedCount").value(1));
     }
 }

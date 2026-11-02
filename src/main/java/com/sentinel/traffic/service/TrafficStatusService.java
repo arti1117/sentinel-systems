@@ -1,27 +1,43 @@
 package com.sentinel.traffic.service;
 
 import com.sentinel.traffic.client.TrafficFeedClient;
+import com.sentinel.traffic.client.TrafficFeedClient.LiveRefreshResult;
 import com.sentinel.traffic.domain.CongestionLevel;
 import com.sentinel.traffic.domain.RoadLinkTraffic;
 import com.sentinel.traffic.domain.TrafficOverviewResponse;
 import com.sentinel.traffic.domain.TrafficSource;
 import jakarta.annotation.PostConstruct;
+import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import org.springframework.stereotype.Service;
 
 /**
- * 1단계(도로현황) 서비스: 국토부 ITS와 서울시 TOPIS 실시간 소통 데이터를 통합 수집·정규화하고 현황 요약을 제공한다.
+ * 1단계(도로현황) 서비스: 국토부 ITS와 서울시 TOPIS 도로 구간을 통합 관리한다.
+ * 월간 오픈API 쿼터(100건) 보호를 위해 서버 기동 및 일반 조회 시에는 로컬 캐시만 사용하며,
+ * 사용자의 수동 새로고침 요청 시에만 외부 오픈API를 호출한다.
  */
 @Service
 public class TrafficStatusService {
 
     private final List<TrafficFeedClient> feedClients;
     private final Map<LinkKey, RoadLinkTraffic> latestByLink = new ConcurrentHashMap<>();
+    private final AtomicInteger sessionApiCallsUsed = new AtomicInteger(0);
+    private final AtomicReference<Instant> lastLiveRefreshAt = new AtomicReference<>(null);
 
     public record LinkKey(TrafficSource source, String linkId) {
+    }
+
+    public record ManualRefreshSummary(
+            int updatedCount,
+            int apiCallsUsedNow,
+            int sessionApiCallsUsed,
+            Instant lastLiveRefreshAt
+    ) {
     }
 
     public TrafficStatusService(List<TrafficFeedClient> feedClients) {
@@ -30,22 +46,48 @@ public class TrafficStatusService {
 
     @PostConstruct
     public void init() {
-        refreshAllFeeds();
+        loadFromCacheOnly();
     }
 
     /**
-     * 등록된 모든 교통 데이터 피드(ITS, TOPIS)를 호출해 최신 소통 현황을 갱신한다.
+     * 외부 API 호출(쿼터 차감) 없이 로컬 캐시와 기본 스냅샷만 메모리에 적재한다.
      */
-    public int refreshAllFeeds() {
-        int updated = 0;
+    public int loadFromCacheOnly() {
+        int loaded = 0;
         for (TrafficFeedClient client : feedClients) {
-            for (RoadLinkTraffic item : client.fetchLatestTraffic()) {
+            for (RoadLinkTraffic item : client.fetchCachedTraffic()) {
+                if (upsertLinkTraffic(item)) {
+                    loaded++;
+                }
+            }
+        }
+        return loaded;
+    }
+
+    /**
+     * 사용자가 수동 새로고침 버튼을 눌렀을 때만 외부 오픈API를 호출해 실시간 속도를 갱신한다.
+     */
+    public ManualRefreshSummary refreshLiveFeeds(TrafficSource targetSource, String targetLinkId) {
+        int updated = 0;
+        int callsNow = 0;
+
+        for (TrafficFeedClient client : feedClients) {
+            if (targetSource != null && client.source() != targetSource) {
+                continue;
+            }
+            LiveRefreshResult result = client.refreshLiveTraffic(targetLinkId);
+            callsNow += result.apiCallsUsed();
+            for (RoadLinkTraffic item : result.updatedLinks()) {
                 if (upsertLinkTraffic(item)) {
                     updated++;
                 }
             }
         }
-        return updated;
+
+        int totalCalls = sessionApiCallsUsed.addAndGet(callsNow);
+        Instant refreshedAt = Instant.now();
+        lastLiveRefreshAt.set(refreshedAt);
+        return new ManualRefreshSummary(updated, callsNow, totalCalls, refreshedAt);
     }
 
     /**
@@ -111,6 +153,8 @@ public class TrafficStatusService {
                 congested,
                 unknown,
                 avgSpeed,
+                sessionApiCallsUsed.get(),
+                lastLiveRefreshAt.get(),
                 filtered
         );
     }

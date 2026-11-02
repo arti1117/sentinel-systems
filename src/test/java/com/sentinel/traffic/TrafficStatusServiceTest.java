@@ -31,21 +31,21 @@ class TrafficStatusServiceTest {
     }
 
     @Test
-    @DisplayName("ITS(전국 고속도로·국도)와 TOPIS(서울시 도로) 소통 데이터 및 지도 좌표를 통합 수집하고 정체 심각도 순으로 정렬한다")
-    void aggregatesItsAndTopisFeedsWithMapGeometry() {
+    @DisplayName("기동 시 외부 오픈API 쿼터를 소모하지 않고 수도권 21개 노선의 정밀 도로 곡선 좌표를 로드한다")
+    void loads21RoadSectionsWithExactCurveGeometryWithoutApiCalls() {
         TrafficStatusService service = new TrafficStatusService(
                 List.of(new ItsTrafficFeedClient(), new TopisTrafficFeedClient())
         );
         service.init();
 
         TrafficOverviewResponse all = service.getOverview(null, null);
-        assertThat(all.totalLinks()).isEqualTo(11);
-        assertThat(all.congestedCount()).isGreaterThan(0);
+        assertThat(all.totalLinks()).isEqualTo(21);
+        assertThat(all.sessionApiCallsUsed()).isZero();
         assertThat(all.links().getFirst().congestionLevel()).isEqualTo(CongestionLevel.CONGESTED);
-        assertThat(all.links()).allMatch(link -> link.geometry().size() >= 2);
+        assertThat(all.links()).allMatch(link -> link.geometry().size() >= 50);
 
         TrafficOverviewResponse topisOnly = service.getOverview(TrafficSource.TOPIS, null);
-        assertThat(topisOnly.totalLinks()).isEqualTo(6);
+        assertThat(topisOnly.totalLinks()).isEqualTo(12);
         assertThat(topisOnly.links()).allMatch(link -> link.source() == TrafficSource.TOPIS);
     }
 
@@ -64,7 +64,7 @@ class TrafficStatusServiceTest {
                 TrafficSource.ITS,
                 "ITS-HWY-0010-01",
                 "경부고속도로",
-                "양재IC → 판교JC",
+                "한남IC → 서초IC → 양재IC",
                 RoadType.HIGHWAY,
                 25.0,
                 path,
@@ -74,7 +74,7 @@ class TrafficStatusServiceTest {
                 TrafficSource.ITS,
                 "ITS-HWY-0010-01",
                 "경부고속도로",
-                "양재IC → 판교JC",
+                "한남IC → 서초IC → 양재IC",
                 RoadType.HIGHWAY,
                 95.0,
                 path,

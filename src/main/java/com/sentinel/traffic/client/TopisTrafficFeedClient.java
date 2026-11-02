@@ -1,9 +1,8 @@
 package com.sentinel.traffic.client;
 
+import com.sentinel.traffic.client.RoadNetworkCatalog.RoadSectionSeed;
 import com.sentinel.traffic.config.PublicApiProperties;
-import com.sentinel.traffic.domain.GeoPoint;
 import com.sentinel.traffic.domain.RoadLinkTraffic;
-import com.sentinel.traffic.domain.RoadType;
 import com.sentinel.traffic.domain.TrafficSource;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -17,8 +16,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 /**
- * 서울 열린데이터광장(TOPIS) 서울시 도시고속도로·주요 간선도로 실시간 소통 데이터 수집 클라이언트.
- * SENTINEL_TOPIS_API_KEY가 설정되면 실시간 TrafficInfo 오픈API를 호출하고, 미설정 시 기본 스냅샷으로 동작한다.
+ * 서울 열린데이터광장(TOPIS) 서울시 도시고속도로·주요 간선도로(12개 노선) 수집 클라이언트.
+ * 기동 시에는 쿼터를 소모하지 않고 캐시를 로드하며, 수동 새로고침 시에만 오픈API를 호출한다.
  */
 @Component
 public class TopisTrafficFeedClient implements TrafficFeedClient {
@@ -27,105 +26,17 @@ public class TopisTrafficFeedClient implements TrafficFeedClient {
     private static final Pattern PRCS_SPD_PATTERN = Pattern.compile("<prcs_spd>([0-9.]+)</prcs_spd>");
 
     private final PublicApiProperties properties;
+    private final RoadNetworkCatalog catalog;
     private final RestClient restClient;
 
-    private record TopisSectionSpec(
-            String linkId,
-            String topisApiLinkId,
-            String roadName,
-            String sectionName,
-            RoadType roadType,
-            double fallbackSpeedKph,
-            List<GeoPoint> geometry
-    ) {
-    }
-
-    private static final List<TopisSectionSpec> MONITORED_SECTIONS = List.of(
-            new TopisSectionSpec(
-                    "TOPIS-UHWY-088-01",
-                    "1210001800",
-                    "올림픽대로",
-                    "한남대교남단 → 성수대교남단",
-                    RoadType.URBAN_HIGHWAY,
-                    19.5,
-                    List.of(
-                            new GeoPoint(37.5192, 127.0128),
-                            new GeoPoint(37.5270, 127.0285),
-                            new GeoPoint(37.5338, 127.0442)
-                    )
-            ),
-            new TopisSectionSpec(
-                    "TOPIS-UHWY-070-01",
-                    "1020000400",
-                    "강변북로",
-                    "마포대교북단 → 한강대교북단",
-                    RoadType.URBAN_HIGHWAY,
-                    36.0,
-                    List.of(
-                            new GeoPoint(37.5365, 126.9412),
-                            new GeoPoint(37.5280, 126.9535),
-                            new GeoPoint(37.5218, 126.9665)
-                    )
-            ),
-            new TopisSectionSpec(
-                    "TOPIS-UHWY-030-01",
-                    "1120000100",
-                    "내부순환로",
-                    "성산램프 → 홍은램프",
-                    RoadType.URBAN_HIGHWAY,
-                    58.0,
-                    List.of(
-                            new GeoPoint(37.5648, 126.9032),
-                            new GeoPoint(37.5785, 126.9210),
-                            new GeoPoint(37.5892, 126.9420)
-                    )
-            ),
-            new TopisSectionSpec(
-                    "TOPIS-ART-101-01",
-                    "1220003800",
-                    "테헤란로",
-                    "삼성역사거리 → 역삼역사거리",
-                    RoadType.URBAN_ARTERIAL,
-                    12.0,
-                    List.of(
-                            new GeoPoint(37.5088, 127.0631),
-                            new GeoPoint(37.5045, 127.0490),
-                            new GeoPoint(37.5006, 127.0365)
-                    )
-            ),
-            new TopisSectionSpec(
-                    "TOPIS-ART-102-01",
-                    "1220000100",
-                    "강남대로",
-                    "강남역사거리 → 신논현역교차로",
-                    RoadType.URBAN_ARTERIAL,
-                    18.5,
-                    List.of(
-                            new GeoPoint(37.4979, 127.0276),
-                            new GeoPoint(37.5045, 127.0250)
-                    )
-            ),
-            new TopisSectionSpec(
-                    "TOPIS-ART-103-01",
-                    "1000000300",
-                    "세종대로",
-                    "광화문삼거리 → 시청역교차로",
-                    RoadType.URBAN_ARTERIAL,
-                    29.0,
-                    List.of(
-                            new GeoPoint(37.5759, 126.9768),
-                            new GeoPoint(37.5663, 126.9779)
-                    )
-            )
-    );
-
     public TopisTrafficFeedClient() {
-        this(new PublicApiProperties(3000L, "", ""));
+        this(new PublicApiProperties(3000L, "", ""), new RoadNetworkCatalog());
     }
 
     @Autowired
-    public TopisTrafficFeedClient(PublicApiProperties properties) {
+    public TopisTrafficFeedClient(PublicApiProperties properties, RoadNetworkCatalog catalog) {
         this.properties = properties;
+        this.catalog = catalog;
         this.restClient = RestClient.create();
     }
 
@@ -135,30 +46,38 @@ public class TopisTrafficFeedClient implements TrafficFeedClient {
     }
 
     @Override
-    public List<RoadLinkTraffic> fetchLatestTraffic() {
+    public List<RoadLinkTraffic> fetchCachedTraffic() {
         Instant now = Instant.now();
-        List<RoadLinkTraffic> results = new ArrayList<>(MONITORED_SECTIONS.size());
+        return catalog.sectionsBySource(TrafficSource.TOPIS).stream()
+                .map(seed -> catalog.toRoadLinkTraffic(seed, now))
+                .toList();
+    }
 
-        for (TopisSectionSpec spec : MONITORED_SECTIONS) {
-            double speedKph = spec.fallbackSpeedKph();
+    @Override
+    public LiveRefreshResult refreshLiveTraffic(String targetLinkId) {
+        Instant now = Instant.now();
+        List<RoadSectionSeed> seeds = catalog.sectionsBySource(TrafficSource.TOPIS);
+        List<RoadLinkTraffic> updated = new ArrayList<>();
+        int apiCalls = 0;
+
+        for (RoadSectionSeed seed : seeds) {
+            if (targetLinkId != null && !targetLinkId.isBlank() && !seed.linkId().equals(targetLinkId)) {
+                continue;
+            }
             if (properties.hasTopisKey()) {
-                Double liveSpeed = fetchLiveSpeedFromSeoulApi(spec.topisApiLinkId());
-                if (liveSpeed != null) {
-                    speedKph = liveSpeed;
+                apiCalls++;
+                Double liveSpeed = fetchLiveSpeedFromSeoulApi(seed.apiLinkId());
+                if (liveSpeed != null && liveSpeed > 0.0) {
+                    catalog.updateCachedSpeed(seed.linkId(), liveSpeed);
                 }
             }
-            results.add(RoadLinkTraffic.of(
-                    TrafficSource.TOPIS,
-                    spec.linkId(),
-                    spec.roadName(),
-                    spec.sectionName(),
-                    spec.roadType(),
-                    speedKph,
-                    spec.geometry(),
-                    now
-            ));
+            updated.add(catalog.toRoadLinkTraffic(seed, now));
         }
-        return results;
+
+        if (apiCalls > 0) {
+            catalog.persistDiskSpeedCache();
+        }
+        return new LiveRefreshResult(updated, apiCalls);
     }
 
     private Double fetchLiveSpeedFromSeoulApi(String topisApiLinkId) {
