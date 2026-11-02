@@ -27,15 +27,17 @@
 
 ---
 
-## 로컬 실행 및 검증 명령어
+## 실행 및 검증 명령어
 
 ```bash
-# 1. 백엔드 테스트 및 API 서버 실행 (http://localhost:8080)
-./gradlew test
-./gradlew bootRun
+# 1. 전체 시스템(PostGIS 16 + Redis 7.4 + Backend + Frontend) 컨테이너 통합 기동
+#    - Frontend (Nginx + React SPA): http://localhost:5173
+#    - Backend API Server:           http://localhost:8080
+#    - PostGIS 16:                   localhost:5432
+#    - Redis 7.4:                    localhost:6379
+docker compose up -d --build
+docker compose ps
 
-# 2. 프론트엔드 React 개발 서버 실행 (http://localhost:5173 -> /api 프록시)
-cd frontend
-npm install
-npm run dev
+# 2. 방어적 TDD(Fail-First Defensive TDD) 전체 테스트 스위트 실행
+./gradlew test --no-daemon
 ```
