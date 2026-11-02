@@ -1,11 +1,13 @@
 package com.sentinel.traffic.domain;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
+import java.util.List;
 
 /**
- * Unified road section traffic status normalized across ITS and TOPIS feeds.
+ * Unified road section traffic status with WGS84 polyline geometry normalized across ITS and TOPIS.
  */
 public record RoadLinkTraffic(
         @NotNull TrafficSource source,
@@ -15,6 +17,7 @@ public record RoadLinkTraffic(
         @NotNull RoadType roadType,
         double speedKph,
         @NotNull CongestionLevel congestionLevel,
+        @NotEmpty List<GeoPoint> geometry,
         @NotNull Instant observedAt
 ) {
 
@@ -25,6 +28,7 @@ public record RoadLinkTraffic(
             String sectionName,
             RoadType roadType,
             double rawSpeedKph,
+            List<GeoPoint> geometry,
             Instant observedAt
     ) {
         CongestionLevel level = roadType.classify(rawSpeedKph);
@@ -37,6 +41,7 @@ public record RoadLinkTraffic(
                 roadType,
                 normalizedSpeed,
                 level,
+                List.copyOf(geometry),
                 observedAt
         );
     }

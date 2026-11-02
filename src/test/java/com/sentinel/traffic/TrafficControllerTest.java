@@ -32,11 +32,13 @@ class TrafficControllerTest {
     }
 
     @Test
-    void overviewEndpointReturnsCombinedItsAndTopisTraffic() throws Exception {
+    void overviewEndpointReturnsCombinedItsAndTopisTrafficWithGeometry() throws Exception {
         mockMvc.perform(get("/api/v1/traffic/overview"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalLinks").value(11))
-                .andExpect(jsonPath("$.links[0].congestionLevel").value("CONGESTED"));
+                .andExpect(jsonPath("$.links[0].congestionLevel").value("CONGESTED"))
+                .andExpect(jsonPath("$.links[0].geometry[0].lat").isNumber())
+                .andExpect(jsonPath("$.links[0].geometry[0].lng").isNumber());
     }
 
     @Test

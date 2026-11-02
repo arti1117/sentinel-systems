@@ -4,10 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sentinel Systems — 실시간 도로 관제 상황판</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
   <style>
     :root {
       --bg: #0f172a;
       --panel: #1e293b;
+      --panel-hover: #273549;
       --border: #334155;
       --text: #f8fafc;
       --muted: #94a3b8;
@@ -21,7 +28,7 @@
       font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", sans-serif;
       background: var(--bg);
       color: var(--text);
-      padding: 24px;
+      padding: 20px 24px;
       line-height: 1.5;
     }
     header {
@@ -29,18 +36,14 @@
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid var(--border);
-      padding-bottom: 16px;
-      margin-bottom: 20px;
+      padding-bottom: 14px;
+      margin-bottom: 16px;
       flex-wrap: wrap;
       gap: 12px;
     }
-    .title-group h1 { font-size: 1.35rem; font-weight: 700; }
-    .title-group p { color: var(--muted); font-size: 0.875rem; }
-    .stages {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
+    .title-group h1 { font-size: 1.3rem; font-weight: 700; }
+    .title-group p { color: var(--muted); font-size: 0.85rem; }
+    .stages { display: flex; gap: 8px; flex-wrap: wrap; }
     .stage-pill {
       padding: 6px 12px;
       border-radius: 999px;
@@ -56,18 +59,18 @@
     }
     .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 12px;
-      margin-bottom: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
     }
     .kpi-card {
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 14px 16px;
+      padding: 12px 14px;
     }
-    .kpi-label { font-size: 0.8rem; color: var(--muted); }
-    .kpi-value { font-size: 1.6rem; font-weight: 700; margin-top: 4px; }
+    .kpi-label { font-size: 0.78rem; color: var(--muted); }
+    .kpi-value { font-size: 1.45rem; font-weight: 700; margin-top: 2px; }
     .toolbar {
       display: flex;
       justify-content: space-between;
@@ -84,13 +87,49 @@
       padding: 6px 12px;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
     }
     button.active {
       border-color: var(--accent);
       color: var(--accent);
       font-weight: 600;
     }
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+    @media (max-width: 1024px) {
+      .workspace-grid { grid-template-columns: 1fr; }
+    }
+    .map-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+    #road-map {
+      width: 100%;
+      height: 540px;
+      background: #0b1120;
+    }
+    .map-legend {
+      position: absolute;
+      bottom: 14px;
+      left: 14px;
+      z-index: 1000;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      display: flex;
+      gap: 12px;
+      font-size: 0.78rem;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -100,36 +139,45 @@
       overflow: hidden;
     }
     th, td {
-      padding: 12px 14px;
+      padding: 11px 12px;
       text-align: left;
       border-bottom: 1px solid var(--border);
-      font-size: 0.9rem;
+      font-size: 0.85rem;
     }
-    th { color: var(--muted); font-weight: 600; font-size: 0.8rem; }
+    th { color: var(--muted); font-weight: 600; font-size: 0.78rem; }
+    tbody tr { cursor: pointer; transition: background 0.15s; }
+    tbody tr:hover, tbody tr.selected { background: var(--panel-hover); }
     .badge {
       display: inline-block;
       padding: 3px 9px;
       border-radius: 999px;
-      font-size: 0.75rem;
+      font-size: 0.74rem;
       font-weight: 700;
     }
     .badge-CONGESTED { background: rgba(239,68,68,0.18); color: var(--congested); }
     .badge-SLOW { background: rgba(245,158,11,0.18); color: var(--slow); }
     .badge-SMOOTH { background: rgba(16,185,129,0.18); color: var(--smooth); }
     .source-tag {
-      font-size: 0.75rem;
-      padding: 2px 7px;
+      font-size: 0.72rem;
+      padding: 2px 6px;
       border-radius: 4px;
       background: #334155;
       color: #e2e8f0;
     }
+    .leaflet-popup-content-wrapper {
+      background: #1e293b;
+      color: #f8fafc;
+      border: 1px solid #334155;
+      border-radius: 8px;
+    }
+    .leaflet-popup-tip { background: #1e293b; }
   </style>
 </head>
 <body>
   <header>
     <div class="title-group">
       <h1>Sentinel Systems — 실시간 도로 관제 상황판</h1>
-      <p>국토부 ITS (고속도로·국도) + 서울시 TOPIS (도시고속·간선도로) 통합 소통 현황</p>
+      <p>국토부 ITS (고속도로·국도) + 서울시 TOPIS (도시고속·간선도로) 지도 매핑 및 소통 현황</p>
     </div>
     <div class="stages">
       <span class="stage-pill active">1. 도로현황</span>
@@ -173,26 +221,42 @@
       <button data-congestion="CONGESTED">정체만</button>
       <button data-congestion="SLOW">서행만</button>
       <button data-congestion="SMOOTH">원활만</button>
+      <button id="fit-all-btn" type="button">지도 전체 보기</button>
     </div>
   </section>
 
-  <table>
-    <thead>
-      <tr>
-        <th>데이터 출처</th>
-        <th>도로 종별</th>
-        <th>도로명</th>
-        <th>구간 (Link)</th>
-        <th>현재 속도</th>
-        <th>소통 상태</th>
-      </tr>
-    </thead>
-    <tbody id="traffic-tbody"></tbody>
-  </table>
+  <main class="workspace-grid">
+    <div class="map-card">
+      <div id="road-map"></div>
+      <div class="map-legend">
+        <span class="legend-item"><i class="legend-dot" style="background:#ef4444"></i>정체 (CONGESTED)</span>
+        <span class="legend-item"><i class="legend-dot" style="background:#f59e0b"></i>서행 (SLOW)</span>
+        <span class="legend-item"><i class="legend-dot" style="background:#10b981"></i>원활 (SMOOTH)</span>
+      </div>
+    </div>
 
+    <table>
+      <thead>
+        <tr>
+          <th>출처</th>
+          <th>도로명 / 구간 (클릭 시 지도 이동)</th>
+          <th>현재 속도</th>
+          <th>상태</th>
+        </tr>
+      </thead>
+      <tbody id="traffic-tbody"></tbody>
+    </table>
+  </main>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
   <script>
     let currentSource = "";
     let currentCongestion = "";
+    const layerByLinkId = new Map();
 
     const labelMap = {
       CONGESTED: "정체",
@@ -201,12 +265,92 @@
       UNKNOWN: "점검중"
     };
 
+    const colorMap = {
+      CONGESTED: "#ef4444",
+      SLOW: "#f59e0b",
+      SMOOTH: "#10b981",
+      UNKNOWN: "#64748b"
+    };
+
     const roadTypeMap = {
       HIGHWAY: "고속도로",
       NATIONAL: "일반국도",
       URBAN_HIGHWAY: "도시고속도로",
       URBAN_ARTERIAL: "도심간선도로"
     };
+
+    const map = L.map("road-map", {
+      center: [37.495, 127.03],
+      zoom: 11
+    });
+
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      attribution: '&copy; OpenStreetMap &copy; CARTO',
+      maxZoom: 19
+    }).addTo(map);
+
+    const roadLayerGroup = L.featureGroup().addTo(map);
+
+    function renderMapLinks(links) {
+      roadLayerGroup.clearLayers();
+      layerByLinkId.clear();
+
+      links.forEach(link => {
+        if (!link.geometry || link.geometry.length === 0) return;
+        const latLngs = link.geometry.map(pt => [pt.lat, pt.lng]);
+        const color = colorMap[link.congestionLevel] || "#38bdf8";
+
+        const polyline = L.polyline(latLngs, {
+          color,
+          weight: 7,
+          opacity: 0.9,
+          lineCap: "round"
+        }).addTo(roadLayerGroup);
+
+        const startMarker = L.circleMarker(latLngs[0], {
+          radius: 5,
+          color: "#0f172a",
+          weight: 2,
+          fillColor: color,
+          fillOpacity: 1.0
+        }).addTo(roadLayerGroup);
+
+        const popupHtml = `
+          <div style="min-width:190px">
+            <div style="font-size:0.75rem;color:#94a3b8">[${link.source}] ${roadTypeMap[link.roadType] || link.roadType}</div>
+            <div style="font-size:1rem;font-weight:700;margin:2px 0">${link.roadName}</div>
+            <div style="font-size:0.85rem;margin-bottom:6px">${link.sectionName}</div>
+            <div style="font-weight:700;color:${color}">
+              ${labelMap[link.congestionLevel]} · ${link.speedKph.toFixed(1)} km/h
+            </div>
+          </div>
+        `;
+        polyline.bindPopup(popupHtml);
+        startMarker.bindPopup(popupHtml);
+
+        polyline.on("click", () => highlightTableRow(link.linkId));
+        layerByLinkId.set(link.linkId, polyline);
+      });
+
+      if (links.length > 0 && roadLayerGroup.getLayers().length > 0) {
+        map.fitBounds(roadLayerGroup.getBounds().pad(0.15));
+      }
+    }
+
+    function highlightTableRow(linkId) {
+      document.querySelectorAll("#traffic-tbody tr").forEach(tr => {
+        tr.classList.toggle("selected", tr.dataset.linkId === linkId);
+      });
+    }
+
+    function focusRoadLink(linkId) {
+      highlightTableRow(linkId);
+      const polyline = layerByLinkId.get(linkId);
+      if (polyline) {
+        map.fitBounds(polyline.getBounds().pad(0.4), { maxZoom: 14 });
+        polyline.openPopup();
+      }
+    }
 
     async function loadOverview() {
       const params = new URLSearchParams();
@@ -224,15 +368,23 @@
 
       const tbody = document.getElementById("traffic-tbody");
       tbody.innerHTML = data.links.map(link => `
-        <tr>
+        <tr data-link-id="${link.linkId}">
           <td><span class="source-tag">${link.source}</span></td>
-          <td>${roadTypeMap[link.roadType] || link.roadType}</td>
-          <td><strong>${link.roadName}</strong></td>
-          <td>${link.sectionName} <span style="color:var(--muted);font-size:0.78rem">(${link.linkId})</span></td>
+          <td>
+            <strong>${link.roadName}</strong>
+            <span style="color:var(--muted);font-size:0.76rem;margin-left:4px">${roadTypeMap[link.roadType] || link.roadType}</span>
+            <div style="color:var(--muted);font-size:0.8rem">${link.sectionName}</div>
+          </td>
           <td><strong>${link.speedKph.toFixed(1)} km/h</strong></td>
           <td><span class="badge badge-${link.congestionLevel}">${labelMap[link.congestionLevel] || link.congestionLevel}</span></td>
         </tr>
       `).join("");
+
+      tbody.querySelectorAll("tr").forEach(tr => {
+        tr.addEventListener("click", () => focusRoadLink(tr.dataset.linkId));
+      });
+
+      renderMapLinks(data.links);
     }
 
     document.querySelectorAll("#source-filters button").forEach(btn => {
@@ -244,13 +396,19 @@
       });
     });
 
-    document.querySelectorAll("#congestion-filters button").forEach(btn => {
+    document.querySelectorAll("#congestion-filters button[data-congestion]").forEach(btn => {
       btn.addEventListener("click", () => {
-        document.querySelectorAll("#congestion-filters button").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll("#congestion-filters button[data-congestion]").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         currentCongestion = btn.dataset.congestion;
         loadOverview();
       });
+    });
+
+    document.getElementById("fit-all-btn").addEventListener("click", () => {
+      if (roadLayerGroup.getLayers().length > 0) {
+        map.fitBounds(roadLayerGroup.getBounds().pad(0.15));
+      }
     });
 
     loadOverview();

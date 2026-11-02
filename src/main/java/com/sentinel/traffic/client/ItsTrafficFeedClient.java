@@ -1,5 +1,6 @@
 package com.sentinel.traffic.client;
 
+import com.sentinel.traffic.domain.GeoPoint;
 import com.sentinel.traffic.domain.RoadLinkTraffic;
 import com.sentinel.traffic.domain.RoadType;
 import com.sentinel.traffic.domain.TrafficSource;
@@ -30,6 +31,11 @@ public class ItsTrafficFeedClient implements TrafficFeedClient {
                         "양재IC → 판교JC",
                         RoadType.HIGHWAY,
                         28.5,
+                        List.of(
+                                new GeoPoint(37.4633, 127.0422),
+                                new GeoPoint(37.4350, 127.0710),
+                                new GeoPoint(37.4055, 127.0953)
+                        ),
                         now
                 ),
                 RoadLinkTraffic.of(
@@ -39,6 +45,11 @@ public class ItsTrafficFeedClient implements TrafficFeedClient {
                         "판교JC → 기흥IC",
                         RoadType.HIGHWAY,
                         54.0,
+                        List.of(
+                                new GeoPoint(37.4055, 127.0953),
+                                new GeoPoint(37.3360, 127.1045),
+                                new GeoPoint(37.2248, 127.1032)
+                        ),
                         now
                 ),
                 RoadLinkTraffic.of(
@@ -48,6 +59,11 @@ public class ItsTrafficFeedClient implements TrafficFeedClient {
                         "성남IC → 하남JC",
                         RoadType.HIGHWAY,
                         88.0,
+                        List.of(
+                                new GeoPoint(37.4342, 127.1215),
+                                new GeoPoint(37.4840, 127.1520),
+                                new GeoPoint(37.5262, 127.1938)
+                        ),
                         now
                 ),
                 RoadLinkTraffic.of(
@@ -57,6 +73,11 @@ public class ItsTrafficFeedClient implements TrafficFeedClient {
                         "신갈JC → 마성IC",
                         RoadType.HIGHWAY,
                         32.0,
+                        List.of(
+                                new GeoPoint(37.2740, 127.1035),
+                                new GeoPoint(37.2855, 127.1510),
+                                new GeoPoint(37.2825, 127.1995)
+                        ),
                         now
                 ),
                 RoadLinkTraffic.of(
@@ -66,6 +87,11 @@ public class ItsTrafficFeedClient implements TrafficFeedClient {
                         "가양대교북단 → 행주대교북단",
                         RoadType.NATIONAL,
                         67.5,
+                        List.of(
+                                new GeoPoint(37.5752, 126.8660),
+                                new GeoPoint(37.5905, 126.8400),
+                                new GeoPoint(37.6062, 126.8175)
+                        ),
                         now
                 )
         );
