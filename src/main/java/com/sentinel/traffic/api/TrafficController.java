@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Phase 1 REST Controller: Real-time road traffic status (ITS + TOPIS) and health check.
+ * 1단계(도로현황) REST 컨트롤러: 실시간 도로 소통 요약 조회, 수동 갱신, 서버 상태 확인 API.
  */
 @RestController
 public class TrafficController {

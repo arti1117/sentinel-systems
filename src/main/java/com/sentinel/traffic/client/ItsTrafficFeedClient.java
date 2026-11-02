@@ -9,8 +9,7 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 /**
- * Adapter for MOLIT National Traffic Information Center (국토교통부 ITS 국가교통정보센터)
- * real-time highway and national road traffic feed.
+ * 국토교통부 국가교통정보센터(ITS) 전국 고속도로·일반국도 실시간 소통 데이터 수집 클라이언트.
  */
 @Component
 public class ItsTrafficFeedClient implements TrafficFeedClient {

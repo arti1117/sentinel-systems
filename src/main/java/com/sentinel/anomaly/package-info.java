@@ -1,5 +1,4 @@
 /**
- * Phase 3: Multi-factor anomaly detection combining road traffic status with
- * KMA weather observations (precipitation, icing, visibility) and Seoul real-time crowd/mobility density.
+ * 3단계(이상징후): 실시간 도로 소통 현황에 기상(강수·결빙·시정) 및 유동인구 혼잡도를 결합한 이상징후 탐지 패키지.
  */
 package com.sentinel.anomaly;

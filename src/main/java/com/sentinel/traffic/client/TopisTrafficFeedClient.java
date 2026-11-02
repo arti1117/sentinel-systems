@@ -9,8 +9,7 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 /**
- * Adapter for Seoul Open Data Plaza TOPIS (서울시 실시간 도로 소통정보)
- * urban highway and arterial road feed.
+ * 서울 열린데이터광장(TOPIS) 서울시 도시고속도로·주요 간선도로 실시간 소통 데이터 수집 클라이언트.
  */
 @Component
 public class TopisTrafficFeedClient implements TrafficFeedClient {

@@ -3,7 +3,7 @@ package com.sentinel.traffic.domain;
 import java.util.List;
 
 /**
- * Aggregated real-time road status summary and link list for the control board.
+ * 실시간 도로 소통 현황 요약 통계 및 구간 목록 응답 DTO.
  */
 public record TrafficOverviewResponse(
         int totalLinks,

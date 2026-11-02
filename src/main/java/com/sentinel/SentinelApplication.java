@@ -5,8 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 /**
- * Sentinel Systems: Real-time traffic accident risk prediction, shockwave propagation,
- * and risk-aware routing control server.
+ * 실시간 도로 소통·돌발·이상징후 관제 및 사고범위 예측 서버 애플리케이션.
  */
 @SpringBootApplication
 @ConfigurationPropertiesScan

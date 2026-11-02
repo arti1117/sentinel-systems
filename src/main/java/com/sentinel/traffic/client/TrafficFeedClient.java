@@ -5,7 +5,7 @@ import com.sentinel.traffic.domain.TrafficSource;
 import java.util.List;
 
 /**
- * Port interface for fetching real-time road traffic status from an external public data provider.
+ * 외부 교통 공공데이터 제공처별 실시간 도로 소통 수집 포트 인터페이스.
  */
 public interface TrafficFeedClient {
 

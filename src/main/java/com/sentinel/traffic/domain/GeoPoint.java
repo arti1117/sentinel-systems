@@ -1,7 +1,7 @@
 package com.sentinel.traffic.domain;
 
 /**
- * WGS84 geographic coordinate (latitude, longitude) for map rendering and spatial indexing.
+ * 지도 렌더링 및 공간 연산용 WGS84 위경도 좌표.
  */
 public record GeoPoint(
         double lat,

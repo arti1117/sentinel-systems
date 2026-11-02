@@ -13,8 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Service;
 
 /**
- * Phase 1 Service: Collects, deduplicates, and aggregates real-time road traffic status
- * across ITS (national highways/roads) and TOPIS (Seoul urban highways/arterials).
+ * 1단계(도로현황) 서비스: 국토부 ITS와 서울시 TOPIS 실시간 소통 데이터를 통합 수집·정규화하고 현황 요약을 제공한다.
  */
 @Service
 public class TrafficStatusService {
@@ -35,7 +34,7 @@ public class TrafficStatusService {
     }
 
     /**
-     * Poll all configured traffic feed adapters (ITS + TOPIS) and merge newer observations.
+     * 등록된 모든 교통 데이터 피드(ITS, TOPIS)를 호출해 최신 소통 현황을 갱신한다.
      */
     public int refreshAllFeeds() {
         int updated = 0;
@@ -50,7 +49,7 @@ public class TrafficStatusService {
     }
 
     /**
-     * Upsert a single road link observation, ignoring out-of-order (older) packets.
+     * 단일 도로 구간의 소통 현황을 갱신한다. 기존 관측 시각보다 과거인 지연 데이터는 무시한다.
      */
     public boolean upsertLinkTraffic(RoadLinkTraffic incoming) {
         LinkKey key = new LinkKey(incoming.source(), incoming.linkId());
@@ -66,8 +65,7 @@ public class TrafficStatusService {
     }
 
     /**
-     * Build a filtered traffic overview sorted by congestion severity (CONGESTED -> SLOW -> SMOOTH)
-     * and ascending speed.
+     * 출처 및 소통 등급 조건으로 필터링하고, 정체 심각도(정체 -> 서행 -> 원활) 및 저속 순으로 정렬해 반환한다.
      */
     public TrafficOverviewResponse getOverview(
             TrafficSource sourceFilter,

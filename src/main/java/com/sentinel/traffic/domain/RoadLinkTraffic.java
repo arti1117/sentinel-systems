@@ -7,7 +7,7 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * Unified road section traffic status with WGS84 polyline geometry normalized across ITS and TOPIS.
+ * ITS와 TOPIS로부터 수집·정규화한 도로 구간별 실시간 소통 상태 및 경로 좌표.
  */
 public record RoadLinkTraffic(
         @NotNull TrafficSource source,
