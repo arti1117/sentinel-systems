@@ -46,9 +46,20 @@ class TrafficControllerTest {
         mockMvc.perform(get("/api/v1/traffic/overview"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalLinks").value(21))
+                .andExpect(jsonPath("$.unknownCount").value(0))
                 .andExpect(jsonPath("$.sessionApiCallsUsed").value(0))
+                .andExpect(jsonPath("$.lastLiveRefreshAt").isNotEmpty())
                 .andExpect(jsonPath("$.links[0].geometry[0].lat").isNumber())
                 .andExpect(jsonPath("$.links[0].geometry[0].lng").isNumber());
+    }
+
+    @Test
+    void overviewEndpointSupportsBboxAndZoomSpatialQuery() throws Exception {
+        mockMvc.perform(get("/api/v1/traffic/overview")
+                        .param("bbox", "127.01,37.48,127.07,37.52")
+                        .param("zoom", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalLinks").isNumber());
     }
 
     @Test

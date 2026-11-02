@@ -7,7 +7,9 @@ import type {
 
 export async function fetchTrafficOverview(
   source?: TrafficSource | "",
-  congestion?: CongestionLevel | ""
+  congestion?: CongestionLevel | "",
+  bbox?: string | null,
+  zoom?: number | null
 ): Promise<TrafficOverviewResponse> {
   const params = new URLSearchParams();
   if (source) {
@@ -15,6 +17,12 @@ export async function fetchTrafficOverview(
   }
   if (congestion) {
     params.set("congestion", congestion);
+  }
+  if (bbox) {
+    params.set("bbox", bbox);
+  }
+  if (typeof zoom === "number") {
+    params.set("zoom", String(zoom));
   }
   const query = params.toString();
   const response = await fetch(`/api/v1/traffic/overview${query ? `?${query}` : ""}`);

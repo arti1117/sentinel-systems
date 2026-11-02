@@ -14688,9 +14688,9 @@
         "lng": 126.76594
       }
     ],
-    "itsRouteType": "its",
-    "itsRouteNo": "0077",
-    "itsDrcType": "up"
+    "itsRouteType": "ex",
+    "itsRouteNo": "1000",
+    "itsDrcType": "down"
   },
   {
     "source": "TOPIS",

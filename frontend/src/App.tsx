@@ -12,27 +12,40 @@ export function App() {
   const [overview, setOverview] = useState<TrafficOverviewResponse | null>(null);
   const [sourceFilter, setSourceFilter] = useState<TrafficSource | "">("");
   const [congestionFilter, setCongestionFilter] = useState<CongestionLevel | "">("");
+  const [viewportFilterEnabled, setViewportFilterEnabled] = useState(false);
+  const [currentBbox, setCurrentBbox] = useState<string | null>(null);
+  const [currentZoom, setCurrentZoom] = useState<number>(11);
   const [selectedLinkId, setSelectedLinkId] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [statusMessage, setStatusMessage] = useState(
-    "자동 호출 꺼짐 (로컬 실측 캐시 표시 중)"
+    "쿼터 보호 모드 (최근 오픈API 실측 스냅샷 즉시 로드)"
   );
   const [fitTrigger, setFitTrigger] = useState(1);
 
   const loadData = useCallback(
     async (triggerMapFit = false) => {
-      const data = await fetchTrafficOverview(sourceFilter, congestionFilter);
+      const data = await fetchTrafficOverview(
+        sourceFilter,
+        congestionFilter,
+        viewportFilterEnabled ? currentBbox : null,
+        currentZoom
+      );
       setOverview(data);
       if (triggerMapFit) {
         setFitTrigger((n) => n + 1);
       }
     },
-    [sourceFilter, congestionFilter]
+    [sourceFilter, congestionFilter, viewportFilterEnabled, currentBbox, currentZoom]
   );
 
   useEffect(() => {
-    void loadData(true);
+    void loadData(false);
   }, [loadData]);
+
+  const handleViewportChange = useCallback((bbox: string, zoom: number) => {
+    setCurrentBbox(bbox);
+    setCurrentZoom(zoom);
+  }, []);
 
   const handleManualRefresh = async (linkIdOnly: string | null) => {
     setRefreshing(true);
@@ -167,13 +180,34 @@ export function App() {
               </button>
             )
           )}
-          <button type="button" onClick={() => setFitTrigger((n) => n + 1)}>
+          <button
+            type="button"
+            className={viewportFilterEnabled ? "active" : ""}
+            onClick={() => setViewportFilterEnabled((prev) => !prev)}
+            title="JTS STRtree 공간 인덱스를 사용해 현재 지도 화면(BBox)과 교차하는 도로만 조회합니다"
+          >
+            {viewportFilterEnabled
+              ? `화면 영역 R-Tree 검색 ON (Z${currentZoom})`
+              : `화면 영역 R-Tree 검색 OFF (Z${currentZoom})`}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setViewportFilterEnabled(false);
+              setFitTrigger((n) => n + 1);
+            }}
+          >
             지도 전체 보기
           </button>
         </div>
 
         <div className="filter-group">
-          <span className="quota-badge">{statusMessage}</span>
+          <span className="quota-badge">
+            {statusMessage}
+            {overview?.lastLiveRefreshAt
+              ? ` · 최근 실측: ${new Date(overview.lastLiveRefreshAt).toLocaleTimeString("ko-KR")}`
+              : ""}
+          </span>
           <button
             type="button"
             className="refresh-btn"
@@ -191,6 +225,7 @@ export function App() {
           selectedLinkId={selectedLinkId}
           fitTrigger={fitTrigger}
           onSelectLink={setSelectedLinkId}
+          onViewportChange={handleViewportChange}
         />
         <TrafficTable
           links={overview?.links ?? []}

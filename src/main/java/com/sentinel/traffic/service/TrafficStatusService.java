@@ -1,5 +1,6 @@
 package com.sentinel.traffic.service;
 
+import com.sentinel.traffic.client.RoadNetworkCatalog;
 import com.sentinel.traffic.client.TrafficFeedClient;
 import com.sentinel.traffic.client.TrafficFeedClient.LiveRefreshResult;
 import com.sentinel.traffic.domain.CongestionLevel;
@@ -11,9 +12,12 @@ import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import org.locationtech.jts.geom.Envelope;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -25,6 +29,7 @@ import org.springframework.stereotype.Service;
 public class TrafficStatusService {
 
     private final List<TrafficFeedClient> feedClients;
+    private final RoadNetworkCatalog catalog;
     private final Map<LinkKey, RoadLinkTraffic> latestByLink = new ConcurrentHashMap<>();
     private final AtomicInteger sessionApiCallsUsed = new AtomicInteger(0);
     private final AtomicReference<Instant> lastLiveRefreshAt = new AtomicReference<>(null);
@@ -41,7 +46,13 @@ public class TrafficStatusService {
     }
 
     public TrafficStatusService(List<TrafficFeedClient> feedClients) {
+        this(feedClients, new RoadNetworkCatalog(false));
+    }
+
+    @Autowired
+    public TrafficStatusService(List<TrafficFeedClient> feedClients, RoadNetworkCatalog catalog) {
         this.feedClients = feedClients;
+        this.catalog = catalog;
     }
 
     @PostConstruct
@@ -60,6 +71,10 @@ public class TrafficStatusService {
                     loaded++;
                 }
             }
+        }
+        Instant cachedTimestamp = catalog.latestCachedObservedAt();
+        if (cachedTimestamp != null && lastLiveRefreshAt.get() == null) {
+            lastLiveRefreshAt.set(cachedTimestamp);
         }
         return loaded;
     }
@@ -113,9 +128,25 @@ public class TrafficStatusService {
             TrafficSource sourceFilter,
             CongestionLevel congestionFilter
     ) {
+        return getOverview(sourceFilter, congestionFilter, null, null);
+    }
+
+    /**
+     * 출처, 소통 등급, 지도 뷰포트 영역(bbox: minLng,minLat,maxLng,maxLat) 및 줌 레벨(zoom LOD)을 적용해 반환한다.
+     */
+    public TrafficOverviewResponse getOverview(
+            TrafficSource sourceFilter,
+            CongestionLevel congestionFilter,
+            String bbox,
+            Integer zoom
+    ) {
+        Set<String> viewportLinkIds = parseEnvelopeAndQuery(bbox);
+
         List<RoadLinkTraffic> filtered = latestByLink.values().stream()
                 .filter(item -> sourceFilter == null || item.source() == sourceFilter)
                 .filter(item -> congestionFilter == null || item.congestionLevel() == congestionFilter)
+                .filter(item -> viewportLinkIds == null || viewportLinkIds.contains(item.linkId()))
+                .map(item -> catalog.applyZoomLod(item, zoom))
                 .sorted(Comparator
                         .comparingInt((RoadLinkTraffic item) -> severityRank(item.congestionLevel()))
                         .thenComparingDouble(RoadLinkTraffic::speedKph)
@@ -157,6 +188,26 @@ public class TrafficStatusService {
                 lastLiveRefreshAt.get(),
                 filtered
         );
+    }
+
+    private Set<String> parseEnvelopeAndQuery(String bbox) {
+        if (bbox == null || bbox.isBlank()) {
+            return null;
+        }
+        String[] parts = bbox.split(",");
+        if (parts.length != 4) {
+            return null;
+        }
+        try {
+            double minLng = Double.parseDouble(parts[0].trim());
+            double minLat = Double.parseDouble(parts[1].trim());
+            double maxLng = Double.parseDouble(parts[2].trim());
+            double maxLat = Double.parseDouble(parts[3].trim());
+            Envelope envelope = new Envelope(minLng, maxLng, minLat, maxLat);
+            return catalog.queryLinkIdsByEnvelope(envelope);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     private static int severityRank(CongestionLevel level) {

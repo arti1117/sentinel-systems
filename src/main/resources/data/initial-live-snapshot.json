@@ -1,0 +1,86 @@
+{
+  "TOPIS-ART-104-01": {
+    "speedKph": 6.7,
+    "observedAt": "2026-11-02T07:55:00Z"
+  },
+  "TOPIS-ART-102-01": {
+    "speedKph": 20.1,
+    "observedAt": "2026-11-02T07:55:00Z"
+  },
+  "TOPIS-UHWY-030-01": {
+    "speedKph": 6.9,
+    "observedAt": "2026-11-02T07:55:00Z"
+  },
+  "TOPIS-UHWY-070-01": {
+    "speedKph": 37.6,
+    "observedAt": "2026-11-02T07:55:00Z"
+  },
+  "TOPIS-UHWY-070-02": {
+    "speedKph": 29.0,
+    "observedAt": "2026-11-02T07:55:00Z"
+  },
+  "ITS-HWY-0010-01": {
+    "speedKph": 68.4,
+    "observedAt": "2026-11-02T07:55:00Z"
+  },
+  "ITS-HWY-0150-01": {
+    "speedKph": 95.6,
+    "observedAt": "2026-11-02T08:59:32Z"
+  },
+  "ITS-HWY-0010-02": {
+    "speedKph": 78.5,
+    "observedAt": "2026-11-02T07:55:00Z"
+  },
+  "ITS-HWY-0010-03": {
+    "speedKph": 88.8,
+    "observedAt": "2026-11-02T08:59:32Z"
+  },
+  "TOPIS-UHWY-088-01": {
+    "speedKph": 29.4,
+    "observedAt": "2026-11-02T07:55:00Z"
+  },
+  "TOPIS-UHWY-088-02": {
+    "speedKph": 30.1,
+    "observedAt": "2026-11-02T07:55:00Z"
+  },
+  "ITS-HWY-1000-02": {
+    "speedKph": 73.1,
+    "observedAt": "2026-11-02T08:59:32Z"
+  },
+  "TOPIS-ART-105-01": {
+    "speedKph": 23.0,
+    "observedAt": "2026-11-02T07:55:00Z"
+  },
+  "ITS-HWY-1000-03": {
+    "speedKph": 70.1,
+    "observedAt": "2026-11-02T08:59:32Z"
+  },
+  "TOPIS-ART-103-01": {
+    "speedKph": 15.5,
+    "observedAt": "2026-11-02T07:55:00Z"
+  },
+  "ITS-HWY-0500-01": {
+    "speedKph": 79.6,
+    "observedAt": "2026-11-02T08:59:32Z"
+  },
+  "ITS-HWY-1000-01": {
+    "speedKph": 59.9,
+    "observedAt": "2026-11-02T08:59:32Z"
+  },
+  "TOPIS-UHWY-060-01": {
+    "speedKph": 22.0,
+    "observedAt": "2026-11-02T07:55:00Z"
+  },
+  "TOPIS-ART-101-01": {
+    "speedKph": 21.0,
+    "observedAt": "2026-11-02T07:55:00Z"
+  },
+  "TOPIS-UHWY-061-01": {
+    "speedKph": 77.0,
+    "observedAt": "2026-11-02T08:59:32Z"
+  },
+  "ITS-NAT-0077-01": {
+    "speedKph": 41.7,
+    "observedAt": "2026-11-02T09:02:32Z"
+  }
+}

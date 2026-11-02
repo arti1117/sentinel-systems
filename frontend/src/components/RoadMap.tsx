@@ -12,18 +12,22 @@ interface RoadMapProps {
   selectedLinkId: string | null;
   fitTrigger: number;
   onSelectLink: (linkId: string) => void;
+  onViewportChange?: (bbox: string, zoom: number) => void;
 }
 
 export function RoadMap({
   links,
   selectedLinkId,
   fitTrigger,
-  onSelectLink
+  onSelectLink,
+  onViewportChange
 }: RoadMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const layerGroupRef = useRef<L.FeatureGroup | null>(null);
   const polylineByLinkIdRef = useRef<Map<string, L.Polyline>>(new Map());
+  const viewportCallbackRef = useRef(onViewportChange);
+  viewportCallbackRef.current = onViewportChange;
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) {
@@ -40,11 +44,30 @@ export function RoadMap({
       maxZoom: 19
     }).addTo(map);
 
+    const emitViewport = () => {
+      if (!viewportCallbackRef.current) {
+        return;
+      }
+      const b = map.getBounds();
+      const bboxStr = [
+        b.getWest().toFixed(5),
+        b.getSouth().toFixed(5),
+        b.getEast().toFixed(5),
+        b.getNorth().toFixed(5)
+      ].join(",");
+      viewportCallbackRef.current(bboxStr, map.getZoom());
+    };
+
+    map.on("moveend", emitViewport);
+    map.on("zoomend", emitViewport);
+
     const group = L.featureGroup().addTo(map);
     mapRef.current = map;
     layerGroupRef.current = group;
 
     return () => {
+      map.off("moveend", emitViewport);
+      map.off("zoomend", emitViewport);
       map.remove();
       mapRef.current = null;
       layerGroupRef.current = null;

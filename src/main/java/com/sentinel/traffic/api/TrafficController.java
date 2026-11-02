@@ -34,9 +34,11 @@ public class TrafficController {
     @GetMapping("/api/v1/traffic/overview")
     public TrafficOverviewResponse getOverview(
             @RequestParam(required = false) TrafficSource source,
-            @RequestParam(required = false) CongestionLevel congestion
+            @RequestParam(required = false) CongestionLevel congestion,
+            @RequestParam(required = false) String bbox,
+            @RequestParam(required = false) Integer zoom
     ) {
-        return trafficStatusService.getOverview(source, congestion);
+        return trafficStatusService.getOverview(source, congestion, bbox, zoom);
     }
 
     @PostMapping("/api/v1/traffic/refresh")
