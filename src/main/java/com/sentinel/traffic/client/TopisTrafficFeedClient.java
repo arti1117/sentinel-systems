@@ -95,7 +95,7 @@ public class TopisTrafficFeedClient implements TrafficFeedClient {
             ),
             new TopisSectionSpec(
                     "TOPIS-ART-102-01",
-                    "1210000700",
+                    "1220000100",
                     "강남대로",
                     "강남역사거리 → 신논현역교차로",
                     RoadType.URBAN_ARTERIAL,
