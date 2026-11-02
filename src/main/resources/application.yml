@@ -6,11 +6,6 @@ spring:
   threads:
     virtual:
       enabled: true
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
-      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
-      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
   datasource:
     url: ${SENTINEL_JDBC_URL:jdbc:postgresql://localhost:5432/sentinel}
     username: ${SENTINEL_DB_USER:sentinel}

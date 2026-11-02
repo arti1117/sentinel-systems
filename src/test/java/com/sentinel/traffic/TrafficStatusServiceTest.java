@@ -147,5 +147,12 @@ class TrafficStatusServiceTest {
         int verticesAtZoom9 = zoom9.links().stream().mapToInt(l -> l.geometry().size()).sum();
         int verticesAtZoom13 = zoom13.links().stream().mapToInt(l -> l.geometry().size()).sum();
         assertThat(verticesAtZoom9).isLessThan(verticesAtZoom13 / 2);
+
+        // 비정상 BBox(NaN, 범위 초과) 방어 검증
+        TrafficOverviewResponse nanBbox = service.getOverview(null, null, "NaN,37.48,127.07,37.52", 12);
+        assertThat(nanBbox.totalLinks()).isEqualTo(21);
+
+        TrafficOverviewResponse outOfBoundsBbox = service.getOverview(null, null, "-200.0,37.48,127.07,37.52", 12);
+        assertThat(outOfBoundsBbox.totalLinks()).isZero();
     }
 }

@@ -203,7 +203,15 @@ public class TrafficStatusService {
             double minLat = Double.parseDouble(parts[1].trim());
             double maxLng = Double.parseDouble(parts[2].trim());
             double maxLat = Double.parseDouble(parts[3].trim());
+            if (!Double.isFinite(minLng) || !Double.isFinite(minLat)
+                    || !Double.isFinite(maxLng) || !Double.isFinite(maxLat)) {
+                return null;
+            }
             Envelope envelope = new Envelope(minLng, maxLng, minLat, maxLat);
+            if (envelope.getMinX() < -180.0 || envelope.getMaxX() > 180.0
+                    || envelope.getMinY() < -90.0 || envelope.getMaxY() > 90.0) {
+                return Set.of();
+            }
             return catalog.queryLinkIdsByEnvelope(envelope);
         } catch (NumberFormatException e) {
             return null;

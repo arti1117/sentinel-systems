@@ -7,6 +7,8 @@ import com.sentinel.traffic.domain.GeoPoint;
 import com.sentinel.traffic.domain.RoadLinkTraffic;
 import com.sentinel.traffic.domain.RoadType;
 import com.sentinel.traffic.domain.TrafficSource;
+import com.sentinel.traffic.infra.PostgisRoadSpatialRepository;
+import com.sentinel.traffic.infra.RedisTrafficSnapshotStore;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -16,6 +18,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
@@ -26,12 +30,14 @@ import org.locationtech.jts.index.strtree.STRtree;
 import org.locationtech.jts.simplify.DouglasPeuckerSimplifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 /**
- * 수도권 주요 도로 구간의 정밀 중심선 좌표(road-network.json), JTS R-Tree 공간 인덱스(STRtree),
- * 그리고 로컬 디스크 실측 스냅샷 캐시(.sentinel-live-cache.json)를 관리한다.
+ * 수도권 주요 도로 구간의 정밀 중심선 좌표(road-network.json),
+ * PostGIS GIST 공간 인덱스(폴백: JTS STRtree),
+ * 그리고 Redis 실측 스냅샷 캐시(폴백: .sentinel-live-cache.json)를 통합 관리한다.
  */
 @Component
 public class RoadNetworkCatalog {
@@ -45,6 +51,8 @@ public class RoadNetworkCatalog {
     private final STRtree spatialIndex = new STRtree();
     private final Map<String, LineString> lineStringByLinkId = new ConcurrentHashMap<>();
     private final Map<String, CachedMeasurement> cachedMeasurements = new ConcurrentHashMap<>();
+    private final PostgisRoadSpatialRepository postgisRepository;
+    private final RedisTrafficSnapshotStore redisSnapshotStore;
 
     public record RoadSectionSeed(
             TrafficSource source,
@@ -67,15 +75,37 @@ public class RoadNetworkCatalog {
     }
 
     public RoadNetworkCatalog() {
-        this(true);
+        this(true, null, null);
     }
 
     public RoadNetworkCatalog(boolean loadDiskCache) {
+        this(loadDiskCache, null, null);
+    }
+
+    @Autowired
+    public RoadNetworkCatalog(
+            @Autowired(required = false) PostgisRoadSpatialRepository postgisRepository,
+            @Autowired(required = false) RedisTrafficSnapshotStore redisSnapshotStore
+    ) {
+        this(true, postgisRepository, redisSnapshotStore);
+    }
+
+    private RoadNetworkCatalog(
+            boolean loadDiskCache,
+            PostgisRoadSpatialRepository postgisRepository,
+            RedisTrafficSnapshotStore redisSnapshotStore
+    ) {
+        this.postgisRepository = postgisRepository;
+        this.redisSnapshotStore = redisSnapshotStore;
         this.sections = loadSeedsFromClasspath();
         buildSpatialIndex();
+        if (postgisRepository != null && postgisRepository.isAvailable()) {
+            postgisRepository.initializeSchemaAndSeed(this.sections);
+        }
         if (loadDiskCache) {
             loadClasspathSnapshotCache();
             loadDiskSpeedCache();
+            syncWithRedisSnapshotStore();
         }
     }
 
@@ -85,10 +115,29 @@ public class RoadNetworkCatalog {
                 .toList();
     }
 
+    public Map<String, CachedMeasurement> getAllCachedMeasurements() {
+        return Map.copyOf(cachedMeasurements);
+    }
+
     /**
-     * JTS STRtree(R-Tree 공간 인덱스)를 사용해 지도 화면 영역(Envelope)과 실제 교차하는 도로 링크 ID 집합을 반환한다.
+     * PostGIS GIST 공간 인덱스(ST_Intersects)를 우선 조회하고,
+     * DB 미연결 또는 예외 발생 시 인메모리 JTS STRtree(R-Tree 공간 인덱스)로 자동 폴백한다.
      */
-    public java.util.Set<String> queryLinkIdsByEnvelope(Envelope viewportEnvelope) {
+    public Set<String> queryLinkIdsByEnvelope(Envelope viewportEnvelope) {
+        if (viewportEnvelope == null || viewportEnvelope.isNull()) {
+            return Set.of();
+        }
+        if (postgisRepository != null && postgisRepository.isAvailable()) {
+            Optional<Set<String>> postgisMatches = postgisRepository.tryFindLinkIdsIntersecting(
+                    viewportEnvelope.getMinX(),
+                    viewportEnvelope.getMinY(),
+                    viewportEnvelope.getMaxX(),
+                    viewportEnvelope.getMaxY()
+            );
+            if (postgisMatches.isPresent()) {
+                return postgisMatches.get();
+            }
+        }
         return queryByEnvelope(viewportEnvelope).stream()
                 .map(RoadSectionSeed::linkId)
                 .collect(java.util.stream.Collectors.toSet());
@@ -180,9 +229,18 @@ public class RoadNetworkCatalog {
     }
 
     public void updateCachedSpeed(String linkId, double speedKph, Instant observedAt) {
-        if (speedKph > 0.0) {
-            double rounded = Math.round(speedKph * 10.0) / 10.0;
-            cachedMeasurements.put(linkId, new CachedMeasurement(rounded, observedAt));
+        if (linkId == null || linkId.isBlank() || observedAt == null || !RedisTrafficSnapshotStore.isValidSpeed(speedKph)) {
+            return;
+        }
+        double rounded = Math.round(speedKph * 10.0) / 10.0;
+        cachedMeasurements.compute(linkId, (k, existing) -> {
+            if (existing != null && observedAt.isBefore(existing.observedAt())) {
+                return existing;
+            }
+            return new CachedMeasurement(rounded, observedAt);
+        });
+        if (redisSnapshotStore != null && redisSnapshotStore.isAvailable()) {
+            redisSnapshotStore.saveIfNewer(linkId, rounded, observedAt);
         }
     }
 
@@ -206,6 +264,22 @@ public class RoadNetworkCatalog {
         } catch (IOException e) {
             log.warn("로컬 속도 캐시 파일 저장 실패: {}", e.getMessage());
         }
+    }
+
+    private void syncWithRedisSnapshotStore() {
+        if (redisSnapshotStore == null || !redisSnapshotStore.isAvailable()) {
+            return;
+        }
+        redisSnapshotStore.seedFromCatalogIfEmpty(cachedMeasurements);
+        Map<String, CachedMeasurement> fromRedis = redisSnapshotStore.findAllValid();
+        fromRedis.forEach((linkId, redisMeasurement) -> {
+            cachedMeasurements.compute(linkId, (k, local) -> {
+                if (local == null || !redisMeasurement.observedAt().isBefore(local.observedAt())) {
+                    return redisMeasurement;
+                }
+                return local;
+            });
+        });
     }
 
     private void buildSpatialIndex() {
@@ -261,15 +335,18 @@ public class RoadNetworkCatalog {
             String linkId = entry.getKey();
             JsonNode val = entry.getValue();
             if (val.isNumber()) {
-                cachedMeasurements.put(
-                        linkId,
-                        new CachedMeasurement(val.asDouble(), Instant.parse("2026-11-02T07:55:00Z"))
-                );
+                double spd = val.asDouble();
+                if (RedisTrafficSnapshotStore.isValidSpeed(spd)) {
+                    cachedMeasurements.put(
+                            linkId,
+                            new CachedMeasurement(spd, Instant.parse("2026-11-02T07:55:00Z"))
+                    );
+                }
             } else if (val.isObject()) {
                 double spd = val.path("speedKph").asDouble(0.0);
                 String obsStr = val.path("observedAt").asText("");
                 Instant obs = obsStr.isBlank() ? Instant.now() : Instant.parse(obsStr);
-                if (spd > 0.0) {
+                if (RedisTrafficSnapshotStore.isValidSpeed(spd)) {
                     cachedMeasurements.put(linkId, new CachedMeasurement(spd, obs));
                 }
             }
