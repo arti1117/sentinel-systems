@@ -22,7 +22,7 @@ spring:
       port: ${SENTINEL_REDIS_PORT:6379}
 
 sentinel:
-  ingestion:
-    api-timeout-ms: ${SENTINEL_API_TIMEOUT_MS:3000}
-    traffic-stale-seconds: ${SENTINEL_TRAFFIC_STALE_SECONDS:300}
-    weather-stale-seconds: ${SENTINEL_WEATHER_STALE_SECONDS:900}
+  public-api:
+    timeout-ms: ${SENTINEL_API_TIMEOUT_MS:3000}
+    its-api-key: ${SENTINEL_ITS_API_KEY:}
+    topis-api-key: ${SENTINEL_TOPIS_API_KEY:}

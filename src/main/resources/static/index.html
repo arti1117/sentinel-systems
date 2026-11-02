@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sentinel Systems — 실시간 도로 관제 상황판</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --congested: #ef4444;
+      --slow: #f59e0b;
+      --smooth: #10b981;
+      --accent: #38bdf8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 24px;
+      line-height: 1.5;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .title-group h1 { font-size: 1.35rem; font-weight: 700; }
+    .title-group p { color: var(--muted); font-size: 0.875rem; }
+    .stages {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .stage-pill {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      background: var(--panel);
+    }
+    .stage-pill.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .kpi-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .kpi-label { font-size: 0.8rem; color: var(--muted); }
+    .kpi-value { font-size: 1.6rem; font-weight: 700; margin-top: 4px; }
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .filter-group { display: flex; gap: 6px; flex-wrap: wrap; }
+    button {
+      background: var(--panel);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    button.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+    th { color: var(--muted); font-weight: 600; font-size: 0.8rem; }
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .badge-CONGESTED { background: rgba(239,68,68,0.18); color: var(--congested); }
+    .badge-SLOW { background: rgba(245,158,11,0.18); color: var(--slow); }
+    .badge-SMOOTH { background: rgba(16,185,129,0.18); color: var(--smooth); }
+    .source-tag {
+      font-size: 0.75rem;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: #334155;
+      color: #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title-group">
+      <h1>Sentinel Systems — 실시간 도로 관제 상황판</h1>
+      <p>국토부 ITS (고속도로·국도) + 서울시 TOPIS (도시고속·간선도로) 통합 소통 현황</p>
+    </div>
+    <div class="stages">
+      <span class="stage-pill active">1. 도로현황</span>
+      <span class="stage-pill">2. 돌발상황</span>
+      <span class="stage-pill">3. 이상징후 (기상+인구)</span>
+      <span class="stage-pill">4. 사고범위예측</span>
+    </div>
+  </header>
+
+  <section class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">관제 구간 수</div>
+      <div class="kpi-value" id="kpi-total">-</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">정체 (CONGESTED)</div>
+      <div class="kpi-value" style="color: var(--congested)" id="kpi-congested">-</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">서행 (SLOW)</div>
+      <div class="kpi-value" style="color: var(--slow)" id="kpi-slow">-</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">원활 (SMOOTH)</div>
+      <div class="kpi-value" style="color: var(--smooth)" id="kpi-smooth">-</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">평균 통행속도</div>
+      <div class="kpi-value" id="kpi-avg-speed">-</div>
+    </div>
+  </section>
+
+  <section class="toolbar">
+    <div class="filter-group" id="source-filters">
+      <button data-source="" class="active">전체 소스 (ITS + TOPIS)</button>
+      <button data-source="ITS">ITS (고속도로·국도)</button>
+      <button data-source="TOPIS">TOPIS (서울시 도로)</button>
+    </div>
+    <div class="filter-group" id="congestion-filters">
+      <button data-congestion="" class="active">전체 상태</button>
+      <button data-congestion="CONGESTED">정체만</button>
+      <button data-congestion="SLOW">서행만</button>
+      <button data-congestion="SMOOTH">원활만</button>
+    </div>
+  </section>
+
+  <table>
+    <thead>
+      <tr>
+        <th>데이터 출처</th>
+        <th>도로 종별</th>
+        <th>도로명</th>
+        <th>구간 (Link)</th>
+        <th>현재 속도</th>
+        <th>소통 상태</th>
+      </tr>
+    </thead>
+    <tbody id="traffic-tbody"></tbody>
+  </table>
+
+  <script>
+    let currentSource = "";
+    let currentCongestion = "";
+
+    const labelMap = {
+      CONGESTED: "정체",
+      SLOW: "서행",
+      SMOOTH: "원활",
+      UNKNOWN: "점검중"
+    };
+
+    const roadTypeMap = {
+      HIGHWAY: "고속도로",
+      NATIONAL: "일반국도",
+      URBAN_HIGHWAY: "도시고속도로",
+      URBAN_ARTERIAL: "도심간선도로"
+    };
+
+    async function loadOverview() {
+      const params = new URLSearchParams();
+      if (currentSource) params.set("source", currentSource);
+      if (currentCongestion) params.set("congestion", currentCongestion);
+
+      const res = await fetch(`/api/v1/traffic/overview?${params.toString()}`);
+      const data = await res.json();
+
+      document.getElementById("kpi-total").textContent = `${data.totalLinks}개`;
+      document.getElementById("kpi-congested").textContent = `${data.congestedCount}개`;
+      document.getElementById("kpi-slow").textContent = `${data.slowCount}개`;
+      document.getElementById("kpi-smooth").textContent = `${data.smoothCount}개`;
+      document.getElementById("kpi-avg-speed").textContent = `${data.averageSpeedKph} km/h`;
+
+      const tbody = document.getElementById("traffic-tbody");
+      tbody.innerHTML = data.links.map(link => `
+        <tr>
+          <td><span class="source-tag">${link.source}</span></td>
+          <td>${roadTypeMap[link.roadType] || link.roadType}</td>
+          <td><strong>${link.roadName}</strong></td>
+          <td>${link.sectionName} <span style="color:var(--muted);font-size:0.78rem">(${link.linkId})</span></td>
+          <td><strong>${link.speedKph.toFixed(1)} km/h</strong></td>
+          <td><span class="badge badge-${link.congestionLevel}">${labelMap[link.congestionLevel] || link.congestionLevel}</span></td>
+        </tr>
+      `).join("");
+    }
+
+    document.querySelectorAll("#source-filters button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("#source-filters button").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentSource = btn.dataset.source;
+        loadOverview();
+      });
+    });
+
+    document.querySelectorAll("#congestion-filters button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("#congestion-filters button").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentCongestion = btn.dataset.congestion;
+        loadOverview();
+      });
+    });
+
+    loadOverview();
+  </script>
+</body>
+</html>
